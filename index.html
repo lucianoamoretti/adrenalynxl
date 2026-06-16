@@ -301,10 +301,11 @@
     .modal-card-visual { width: 168px; height: 235px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 24px 64px rgba(0,0,0,0.6); overflow: hidden; position: relative; flex-shrink: 0; }
     .modal-card-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
     .modal-card-visual::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.55)); pointer-events: none; }
-    .modal-cv-icon { font-size: 30px; position: relative; z-index: 1; }
-    .modal-cv-flag { font-size: 54px; position: relative; z-index: 1; line-height: 1; }
-    .modal-cv-name { font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.9); text-align: center; padding: 0 10px; position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(0,0,0,0.7); max-width: 100%; }
-    .modal-cv-num { font-size: 10px; color: rgba(255,255,255,0.5); position: relative; z-index: 1; }
+    /* Overlay elements (icon/flag/name/num) hidden — the real photo speaks for itself */
+    .modal-cv-icon, .modal-cv-flag, .modal-cv-name, .modal-cv-num { display: none; }
+    /* Not owned: faded black & white, just like the grid */
+    .modal-card-visual { transition: filter 0.25s, opacity 0.25s; }
+    .modal-card-visual:not(.owned) { filter: grayscale(100%) brightness(0.55); opacity: 0.18; }
     .modal-info { padding: 16px 20px 0; flex-shrink: 0; }
     .modal-card-num { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
     .modal-card-name { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
@@ -1397,6 +1398,7 @@ function openModal(cardId){
   rm.style.color=rar.color;
   rm.style.border=`1px solid ${rar.color}44`;
   const isOwned=owned.has(cardId);
+  cv.classList.toggle('owned',isOwned);
   document.getElementById('modal-actions').innerHTML=isOwned
     ?`<button class="btn-remove" onclick="toggleCard(${cardId},false)">Remove from collection</button>`
     :`<button class="btn-add" onclick="toggleCard(${cardId},true)">Add to collection ✓</button>`;
@@ -1420,8 +1422,9 @@ function toggleCard(cardId,add){
     showToast(`Removed #${cardId} ${c.name}`,'info');
   }
   saveOwned();updateHeader();renderDashboard();renderCollection();renderStats();renderRecentAdds();
-  // refresh button inside open modal
+  // refresh button + photo state inside open modal
   const isOwned=owned.has(cardId);
+  document.getElementById('modal-card-visual').classList.toggle('owned',isOwned);
   document.getElementById('modal-actions').innerHTML=isOwned
     ?`<button class="btn-remove" onclick="toggleCard(${cardId},false)">Remove from collection</button>`
     :`<button class="btn-add" onclick="toggleCard(${cardId},true)">Add to collection ✓</button>`;
