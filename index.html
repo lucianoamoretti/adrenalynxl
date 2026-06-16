@@ -158,14 +158,17 @@
     .card-item.owned .card-check { opacity: 1; }
 
     /* Card inner layout */
-    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
-    .card-num { font-size: 7px; font-weight: 700; color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.35); padding: 1px 4px; border-radius: 4px; }
+    /* Real card image — covers entire card-art absolutely */
+    .card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 8px; }
+    /* Overlay elements sit above the image */
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; position: relative; z-index: 1; }
+    .card-num { font-size: 7px; font-weight: 700; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.55); padding: 1px 4px; border-radius: 4px; }
     .card-rar { font-size: 6px; font-weight: 800; letter-spacing: 0.3px; padding: 1px 4px; border-radius: 4px; text-transform: uppercase; }
+    /* Flag shown as fallback when image fails; hidden by z-index when image present */
     .card-flag-wrap { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-    .card-avatar { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
-    .card-flag { position: absolute; bottom: 2px; right: 3px; font-size: 13px; line-height: 1; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.9)); }
-    .card-bottom { }
-    .card-name { font-size: 7.5px; font-weight: 800; line-height: 1.2; text-align: center; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); word-break: break-word; margin-bottom: 3px; }
+    .card-flag { font-size: 26px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)); }
+    .card-bottom { position: relative; z-index: 1; background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%); margin: 0 -6px -7px; padding: 8px 6px 5px; }
+    .card-name { font-size: 7px; font-weight: 800; line-height: 1.2; text-align: center; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,1); word-break: break-word; margin-bottom: 3px; }
     .card-cat-pill { display: inline-block; font-size: 5.5px; font-weight: 700; padding: 1px 5px; border-radius: 99px; letter-spacing: 0.3px; text-transform: uppercase; }
 
     /* Category gradient backgrounds */
@@ -812,19 +815,16 @@ function renderCollection() {
       const catCss = `cat-${c.category.replace(/[^a-z0-9]/g, '-')}`;
       const rarLabel = RARITIES[rar] ? RARITIES[rar].label.split(' ')[0] : rar;
       const catShort = cat.label.replace('Midfield Maestros','Midfield').replace('Master Rookies','Rookies').replace('Defensive Rocks','Defense').replace('Goal Machines','Goals').replace('Fan Favourites','Fan Fav').replace('Team Keepers','Keepers').replace('Team Crests','Crest');
-      const isPlayerCard = !['team-crest','mascot','contender'].includes(c.category);
-      const avatarStyle = isPlayerCard ? 'personas' : 'identicon';
-      const avatarUrl = `https://api.dicebear.com/9.x/${avatarStyle}/svg?seed=${encodeURIComponent(c.name)}&backgroundColor=transparent`;
+      const cardNum = String(c.id).padStart(3, '0');
+      const imgUrl = `https://www.coleka.com/media/item/202603/18/adrenalyn-xl-fifa-world-cup-2026-carte-n-1-${cardNum}-001.webp`;
       html += `<div class="card-item ${isOwned ? 'owned' : ''}" onclick="openModal(${c.id})">
         <div class="card-art ${catCss}">
+          <img class="card-img" src="${imgUrl}" alt="" loading="lazy" onerror="this.style.display='none'">
           <div class="card-top">
             <span class="card-num">#${String(c.id).padStart(3,'0')}</span>
             <span class="card-rar ${rarClass}">${rarLabel}</span>
           </div>
-          <div class="card-flag-wrap">
-            <img class="card-avatar" src="${avatarUrl}" alt="" loading="lazy">
-            <span class="card-flag">${c.flag}</span>
-          </div>
+          <div class="card-flag-wrap"><span class="card-flag">${c.flag}</span></div>
           <div class="card-bottom">
             <div class="card-name">${c.name}</div>
             <span class="card-cat-pill ${pillClass}">${catShort}</span>
