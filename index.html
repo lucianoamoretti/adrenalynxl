@@ -291,20 +291,23 @@
     .toast.error { border-color: var(--red); background: rgba(211,31,42,0.12); }
     .toast.info { border-color: var(--gold); }
 
-    /* ── Modal ── */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    /* ── Modal (full-screen) ── */
+    .modal-overlay { position: fixed; inset: 0; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
     .modal-overlay.open { opacity: 1; pointer-events: all; }
-    .modal-sheet { background: var(--navy-mid); border-radius: 20px 20px 0 0; width: 100%; max-width: 480px; padding: 20px 20px calc(var(--safe-bottom) + 20px); transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+    .modal-sheet { position: absolute; inset: 0; background: var(--navy-dark); display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.32s cubic-bezier(0.4,0,0.2,1); overflow: hidden; }
     .modal-overlay.open .modal-sheet { transform: translateY(0); }
-    .modal-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 99px; margin: 0 auto 16px; }
+    .modal-close-btn { position: absolute; top: calc(env(safe-area-inset-top,0px) + 14px); right: 16px; width: 36px; height: 36px; background: rgba(255,255,255,0.12); border: none; border-radius: 50%; color: var(--white); font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; }
+    .modal-img-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: calc(env(safe-area-inset-top,0px) + 56px) 40px 16px; min-height: 0; }
+    .modal-img { max-height: 100%; max-width: 220px; width: auto; border-radius: 14px; box-shadow: 0 24px 64px rgba(0,0,0,0.6); object-fit: contain; }
+    .modal-img-placeholder { width: 160px; height: 224px; background: rgba(255,255,255,0.05); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 56px; }
+    .modal-info { padding: 16px 20px 0; flex-shrink: 0; }
     .modal-card-num { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
-    .modal-card-name { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
-    .modal-card-team { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
-    .modal-rarity { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; margin-bottom: 16px; }
-    .modal-actions { display: flex; gap: 10px; }
-    .btn-secondary { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 99px; padding: 12px; font-size: 14px; font-weight: 700; color: var(--white); cursor: pointer; }
-    .btn-add { flex: 1; background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: var(--navy-dark); border: none; border-radius: 99px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
-    .btn-remove { flex: 1; background: rgba(211,31,42,0.15); border: 1px solid var(--red); border-radius: 99px; padding: 12px; font-size: 14px; font-weight: 700; color: var(--red); cursor: pointer; }
+    .modal-card-name { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+    .modal-card-team { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
+    .modal-rarity { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; margin-bottom: 0; }
+    .modal-actions { display: flex; gap: 10px; padding: 16px 20px calc(env(safe-area-inset-bottom,0px) + 24px); flex-shrink: 0; }
+    .btn-add { flex: 1; background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: var(--navy-dark); border: none; border-radius: 99px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .btn-remove { flex: 1; background: rgba(211,31,42,0.15); border: 1px solid var(--red); border-radius: 99px; padding: 14px; font-size: 15px; font-weight: 700; color: var(--red); cursor: pointer; }
 
     .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
     .empty-icon { font-size: 40px; margin-bottom: 12px; }
@@ -471,13 +474,19 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+<div class="modal-overlay" id="modal-overlay">
   <div class="modal-sheet" id="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-card-num" id="modal-num"></div>
-    <div class="modal-card-name" id="modal-name"></div>
-    <div class="modal-card-team" id="modal-team"></div>
-    <div class="modal-rarity" id="modal-rarity"></div>
+    <button class="modal-close-btn" onclick="closeModal()">✕</button>
+    <div class="modal-img-wrap">
+      <img class="modal-img" id="modal-img" src="" alt="" onerror="this.style.display='none';document.getElementById('modal-placeholder').style.display='flex'">
+      <div class="modal-img-placeholder" id="modal-placeholder" style="display:none">🃏</div>
+    </div>
+    <div class="modal-info">
+      <div class="modal-card-num" id="modal-num"></div>
+      <div class="modal-card-name" id="modal-name"></div>
+      <div class="modal-card-team" id="modal-team"></div>
+      <div class="modal-rarity" id="modal-rarity"></div>
+    </div>
     <div class="modal-actions" id="modal-actions"></div>
   </div>
 </div>
@@ -1359,7 +1368,12 @@ function openModal(cardId){
   const pm=c.pos?POS_META[c.pos]:null;
   const rar=RARITIES[cm.rarity]||{label:'Common',color:'#8899AA'};
   const posLabel=pm?' · '+pm.label:'';
-  document.getElementById('modal-num').textContent=`#${String(c.id).padStart(3,'0')}`;
+  const cardNum=String(c.id).padStart(3,'0');
+  const imgEl=document.getElementById('modal-img');
+  const phEl=document.getElementById('modal-placeholder');
+  imgEl.style.display='';phEl.style.display='none';
+  imgEl.src=`https://www.coleka.com/media/item/202603/18/adrenalyn-xl-fifa-world-cup-2026-carte-n-1-${cardNum}-001.webp`;
+  document.getElementById('modal-num').textContent=`#${cardNum}`;
   document.getElementById('modal-name').textContent=`${c.flag} ${c.name}`;
   document.getElementById('modal-team').textContent=c.team+' · '+cm.label+posLabel;
   const rm=document.getElementById('modal-rarity');
@@ -1368,16 +1382,13 @@ function openModal(cardId){
   rm.style.color=rar.color;
   rm.style.border=`1px solid ${rar.color}44`;
   const isOwned=owned.has(cardId);
-  document.getElementById('modal-actions').innerHTML=`
-    <button class="btn-secondary" onclick="closeModal()">Close</button>
-    ${isOwned
-      ?`<button class="btn-remove" onclick="toggleCard(${cardId},false)">Remove</button>`
-      :`<button class="btn-add" onclick="toggleCard(${cardId},true)">Add ✓</button>`}`;
+  document.getElementById('modal-actions').innerHTML=isOwned
+    ?`<button class="btn-remove" onclick="toggleCard(${cardId},false)">Remove from collection</button>`
+    :`<button class="btn-add" onclick="toggleCard(${cardId},true)">Add to collection ✓</button>`;
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function closeModal(e){
-  if(e&&e.target!==document.getElementById('modal-overlay'))return;
+function closeModal(){
   document.getElementById('modal-overlay').classList.remove('open');
   modalCardId=null;
 }
@@ -1393,7 +1404,12 @@ function toggleCard(cardId,add){
     owned.delete(cardId);
     showToast(`Removed #${cardId} ${c.name}`,'info');
   }
-  saveOwned();updateHeader();renderDashboard();renderCollection();renderStats();renderRecentAdds();closeModal();
+  saveOwned();updateHeader();renderDashboard();renderCollection();renderStats();renderRecentAdds();
+  // refresh button inside open modal
+  const isOwned=owned.has(cardId);
+  document.getElementById('modal-actions').innerHTML=isOwned
+    ?`<button class="btn-remove" onclick="toggleCard(${cardId},false)">Remove from collection</button>`
+    :`<button class="btn-add" onclick="toggleCard(${cardId},true)">Add to collection ✓</button>`;
 }
 
 // ── Manual Add ──
