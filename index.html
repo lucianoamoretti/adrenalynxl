@@ -86,7 +86,8 @@
     .section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
 
     .rarity-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-    .rarity-row { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; gap: 12px; }
+    .rarity-row { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.15s; }
+    .rarity-row:active { border-color: var(--gold); }
     .rarity-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .rarity-info { flex: 1; }
     .rarity-name { font-size: 13px; font-weight: 600; }
@@ -94,7 +95,8 @@
     .rarity-pct { font-size: 14px; font-weight: 700; color: var(--gold); }
 
     .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-    .team-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 10px; position: relative; overflow: hidden; }
+    .team-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 10px; position: relative; overflow: hidden; cursor: pointer; transition: border-color 0.15s; }
+    .team-card:active { border-color: var(--gold); }
     .team-card-flag { font-size: 22px; margin-bottom: 3px; }
     .team-card-name { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .team-card-pct { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
@@ -259,7 +261,8 @@
     .big-ring-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
     .category-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-    .cat-row { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 12px 14px; }
+    .cat-row { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; transition: border-color 0.15s; }
+    .cat-row:active { border-color: var(--gold); }
     .cat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
     .cat-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
     .cat-icon { font-size: 14px; }
@@ -670,7 +673,7 @@ function renderDashboard() {
     const rd = stats.byRarity[key] || { total: 0, owned: 0 };
     const rp = pct(rd.owned, rd.total);
     rl.innerHTML += `
-      <div class="rarity-row">
+      <div class="rarity-row" data-filter="rar:${key}" onclick="openFilter(this.dataset.filter)">
         <div class="rarity-dot" style="background:${r.color}"></div>
         <div class="rarity-info">
           <div class="rarity-name">${r.label}</div>
@@ -688,7 +691,7 @@ function renderDashboard() {
     const cat = CATEGORIES[catKey] || { label: catKey, icon: '📋', color: '#888' };
     const cp = pct(cd.owned, cd.total);
     csl.innerHTML += `
-      <div class="rarity-row">
+      <div class="rarity-row" data-filter="cat:${catKey}" onclick="openFilter(this.dataset.filter)">
         <div class="rarity-dot" style="background:${cat.color}"></div>
         <div class="rarity-info">
           <div class="rarity-name">${cat.icon} ${cat.label}</div>
@@ -708,7 +711,7 @@ function renderDashboard() {
   for (const t of teamEntries) {
     const tp = pct(t.owned, t.total);
     tg.innerHTML += `
-      <div class="team-card">
+      <div class="team-card" data-filter="team:${t.name}" onclick="openFilter(this.dataset.filter)">
         <div class="team-card-flag">${t.flag}</div>
         <div class="team-card-name">${t.name}</div>
         <div class="team-card-pct">${t.owned}/${t.total} · ${tp}%</div>
@@ -724,6 +727,7 @@ function buildFilterOptions() {
     { key: 'all', label: 'All' },
     { key: 'missing', label: 'Missing' },
     { key: 'owned', label: 'Owned' },
+    ...Object.entries(RARITIES).map(([k,v]) => ({ key: 'rar:'+k, label: '● '+v.label })),
     ...Object.entries(CATEGORIES).map(([k,v]) => ({ key: 'cat:'+k, label: v.icon+' '+v.label })),
     ...TEAMS_DATA.map(t => ({ key: 'team:'+t.name, label: t.flag+' '+t.name })),
   ];
@@ -742,6 +746,14 @@ function setFilter(key) {
   renderCollection();
 }
 
+function openFilter(key) {
+  activeFilter = key;
+  searchQuery = '';
+  document.getElementById('search-input').value = '';
+  renderFilterChips();
+  switchScreen('collection');
+}
+
 function filterCards() {
   searchQuery = document.getElementById('search-input').value.toLowerCase();
   renderCollection();
@@ -753,6 +765,7 @@ function getFilteredCards() {
     if (activeFilter === 'missing' && owned.has(c.id)) return false;
     if (activeFilter.startsWith('cat:') && c.category !== activeFilter.slice(4)) return false;
     if (activeFilter.startsWith('team:') && c.team !== activeFilter.slice(5)) return false;
+    if (activeFilter.startsWith('rar:') && c.rarity !== activeFilter.slice(4)) return false;
     if (searchQuery) {
       const q = searchQuery;
       if (!c.name.toLowerCase().includes(q) && !c.team.toLowerCase().includes(q) && !String(c.id).includes(q)) return false;
@@ -770,7 +783,8 @@ function renderCollection() {
     return;
   }
 
-  // Group by team if not filtering by specific team
+  // Group by team, cards in numeric order
+  cards.sort((a,b) => a.id - b.id);
   const grouped = {};
   for (const c of cards) {
     const group = c.team;
@@ -986,7 +1000,7 @@ function renderStats() {
     const rd = stats.byRarity[key] || { total: 0, owned: 0 };
     const rp = pct(rd.owned, rd.total);
     srl.innerHTML += `
-      <div class="rarity-row">
+      <div class="rarity-row" data-filter="rar:${key}" onclick="openFilter(this.dataset.filter)">
         <div class="rarity-dot" style="background:${r.color}"></div>
         <div class="rarity-info">
           <div class="rarity-name">${r.label}</div>
@@ -1003,7 +1017,7 @@ function renderStats() {
     const cd = stats.byCat[catKey] || { total: 0, owned: 0 };
     const cp = pct(cd.owned, cd.total);
     scl.innerHTML += `
-      <div class="cat-row">
+      <div class="cat-row" data-filter="cat:${catKey}" onclick="openFilter(this.dataset.filter)">
         <div class="cat-top">
           <div class="cat-name"><span class="cat-icon">${cat.icon}</span>${cat.label}</div>
           <div class="cat-stat">${cd.owned}/${cd.total} · ${cp}%</div>
@@ -1023,7 +1037,7 @@ function renderStats() {
   for (const t of teamsSorted) {
     const tp = pct(t.owned, t.total);
     stl.innerHTML += `
-      <div class="rarity-row">
+      <div class="rarity-row" data-filter="team:${t.name}" onclick="openFilter(this.dataset.filter)">
         <div style="font-size:18px">${t.flag}</div>
         <div class="rarity-info">
           <div class="rarity-name">${t.name}</div>
