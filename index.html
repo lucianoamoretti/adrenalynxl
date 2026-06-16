@@ -299,6 +299,7 @@
     .modal-close-btn { position: absolute; top: calc(env(safe-area-inset-top,0px) + 14px); right: 16px; width: 36px; height: 36px; background: rgba(255,255,255,0.12); border: none; border-radius: 50%; color: var(--white); font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; }
     .modal-img-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: calc(env(safe-area-inset-top,0px) + 56px) 40px 16px; min-height: 0; }
     .modal-card-visual { width: 168px; height: 235px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 24px 64px rgba(0,0,0,0.6); overflow: hidden; position: relative; flex-shrink: 0; }
+    .modal-card-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
     .modal-card-visual::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.55)); pointer-events: none; }
     .modal-cv-icon { font-size: 30px; position: relative; z-index: 1; }
     .modal-cv-flag { font-size: 54px; position: relative; z-index: 1; line-height: 1; }
@@ -483,6 +484,7 @@
     <button class="modal-close-btn" onclick="closeModal()">✕</button>
     <div class="modal-img-wrap">
       <div class="modal-card-visual" id="modal-card-visual">
+        <img class="modal-card-photo" id="modal-card-photo" src="" alt="" onerror="this.style.display='none'">
         <div class="modal-cv-icon" id="modal-cv-icon"></div>
         <div class="modal-cv-flag" id="modal-cv-flag"></div>
         <div class="modal-cv-name" id="modal-cv-name"></div>
@@ -1383,6 +1385,9 @@ function openModal(cardId){
   document.getElementById('modal-cv-flag').textContent=c.flag;
   document.getElementById('modal-cv-name').textContent=c.name;
   document.getElementById('modal-cv-num').textContent=`#${cardNum}`;
+  const photo=document.getElementById('modal-card-photo');
+  photo.style.display='';
+  photo.src=`images/cards/${cardNum}.webp`;
   document.getElementById('modal-num').textContent=`#${cardNum}`;
   document.getElementById('modal-name').textContent=`${c.flag} ${c.name}`;
   document.getElementById('modal-team').textContent=c.team+' · '+cm.label+posLabel;
