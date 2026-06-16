@@ -496,7 +496,7 @@
         <div class="manual-add">
           <div class="manual-title">Add by number</div>
           <div class="manual-row">
-            <input class="manual-input" id="manual-num" type="number" min="1" max="630" placeholder="1 – 630" inputmode="numeric">
+            <input class="manual-input" id="manual-num" type="number" min="1" max="924" placeholder="1–630, or 631+ (extras)" inputmode="numeric">
             <button class="btn-primary" onclick="addManual()">Add</button>
           </div>
         </div>
@@ -1638,10 +1638,16 @@ function renderCollection(){
     if(!set){list.innerHTML='';return;}
     const ec=set.cards.slice().sort((a,b)=>a.id-b.id);
     const ownedN=ec.filter(c=>owned.has(c.id)).length;
+    const exportRow=ownedN<ec.length
+      ? `<div class="dupes-export-row" style="margin:10px 0 14px">
+           <button class="btn-primary" onclick="copyExtra('${set.key}')">Copy missing</button>
+           <button class="btn-secondary" onclick="exportExtraCsv('${set.key}')">Download CSV</button>
+         </div>`
+      : '';
     list.innerHTML=`<div class="group-header">
       <span class="group-name">${set.icon} ${set.label}</span>
       <span class="group-count">${ownedN}/${ec.length}</span>
-    </div><div class="cards-grid">${ec.map(cardItemHtml).join('')}</div>`;
+    </div>${exportRow}<div class="cards-grid">${ec.map(cardItemHtml).join('')}</div>`;
     return;
   }
   const cards=getFilteredCards();
@@ -1881,6 +1887,30 @@ function exportMissingCsv(){
   showToast('CSV exported!','success');
 }
 
+// ── Extra-set export (missing cards of a Limited Edition / Momentum / WCM set) ──
+function downloadCsv(rows,filename){
+  const csv=rows.map(r=>r.map(v=>{v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',')).join('\n');
+  const url=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}));
+  const a=document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function setMissing(key){ const s=EXTRA_SET_BY_KEY[key]; return s.cards.filter(c=>!owned.has(c.id)).sort((a,b)=>a.id-b.id); }
+function copyExtra(key){
+  const s=EXTRA_SET_BY_KEY[key], items=setMissing(key);
+  if(!items.length){showToast('Nothing missing here 🎉','info');return;}
+  const txt=items.map(c=>`#${c.id} | ${s.label} | ${c.name}`).join('\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>showToast('Missing list copied!','success'),()=>fallbackCopy(txt));
+  }else fallbackCopy(txt);
+}
+function exportExtraCsv(key){
+  const s=EXTRA_SET_BY_KEY[key], items=setMissing(key);
+  if(!items.length){showToast('Nothing missing here 🎉','info');return;}
+  downloadCsv([['Number','Set','Name'],...items.map(c=>[c.id,s.label,c.name])], `missing-${key}-adrenalynxl.csv`);
+  showToast('CSV exported!','success');
+}
+
 function toggleCard(cardId,add){
   const c=cardById(cardId);if(!c)return;
   if(add){
@@ -1905,7 +1935,7 @@ function toggleCard(cardId,add){
 function addManual(){
   const input=document.getElementById('manual-num');
   const num=parseInt(input.value);
-  if(!num||num<1||num>TOTAL){showToast('Enter a valid card number (1–630)','error');return;}
+  if(!num||!cardById(num)){showToast('Enter a valid card number (1–630 or an extra)','error');return;}
   input.value='';openModal(num);
 }
 document.getElementById('manual-num').addEventListener('keydown',e=>{if(e.key==='Enter')addManual();});
