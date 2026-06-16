@@ -172,17 +172,19 @@
     .card-cat-pill { display: inline-block; font-size: 5.5px; font-weight: 700; padding: 1px 5px; border-radius: 99px; letter-spacing: 0.3px; text-transform: uppercase; }
 
     /* Category gradient backgrounds */
-    .cat-base       { background: linear-gradient(160deg,#1C3A6A,#0D2040 70%,#060F22); }
-    .cat-team-crest { background: linear-gradient(160deg,#1A3A80,#0D2555 70%,#07163A); }
-    .cat-mascot     { background: linear-gradient(160deg,#243080,#141E60); }
-    .cat-contender  { background: linear-gradient(160deg,#183870,#0A2050); }
-    .cat-def-rock   { background: linear-gradient(160deg,#3A1880,#220B5E 70%,#110535); }
-    .cat-fan-fav    { background: linear-gradient(160deg,#4A0A9A,#300470 70%,#18024A); }
-    .cat-goal-mach  { background: linear-gradient(160deg,#6A1800,#450B00 70%,#240500); }
-    .cat-icon       { background: linear-gradient(160deg,#4A3500,#2E1F00 70%,#180E00); }
-    .cat-rookies    { background: linear-gradient(160deg,#0A4A30,#053020 70%,#021508); }
-    .cat-midfield   { background: linear-gradient(160deg,#2A1260,#180940 70%,#0C0525); }
-    .cat-keeper     { background: linear-gradient(160deg,#0A2A5A,#051A40 70%,#020D25); }
+    .cat-hero          { background: linear-gradient(160deg,#1C3A6A,#0D2040 70%,#060F22); }
+    .cat-crest         { background: linear-gradient(160deg,#1A3A80,#0D2555 70%,#07163A); }
+    .cat-mascot        { background: linear-gradient(160deg,#243080,#141E60); }
+    .cat-contender     { background: linear-gradient(160deg,#183870,#0A2050); }
+    .cat-def-rock      { background: linear-gradient(160deg,#3A1880,#220B5E 70%,#110535); }
+    .cat-fan-fav       { background: linear-gradient(160deg,#4A0A9A,#300470 70%,#18024A); }
+    .cat-goal-mach     { background: linear-gradient(160deg,#6A1800,#450B00 70%,#240500); }
+    .cat-icon          { background: linear-gradient(160deg,#4A3500,#2E1F00 70%,#180E00); }
+    .cat-rookie        { background: linear-gradient(160deg,#0A4A30,#053020 70%,#021508); }
+    .cat-midfield      { background: linear-gradient(160deg,#2A1260,#180940 70%,#0C0525); }
+    .cat-top-keeper    { background: linear-gradient(160deg,#0A2A5A,#051A40 70%,#020D25); }
+    .cat-golden-baller { background: linear-gradient(160deg,#3A2800,#5A3A00 70%,#2A1A00); }
+    .cat-eternos       { background: linear-gradient(160deg,#2A2A00,#3A3500 70%,#1A1800); }
 
     /* Rarity badge colors */
     .rar-common   { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
@@ -198,7 +200,16 @@
     .pill-momentum { background: rgba(255,80,40,0.35); color: #FF9070; }
     .pill-le       { background: rgba(244,196,48,0.3); color: #FFD966; }
 
+    /* Position pill */
+    .card-pos { display: inline-block; font-size: 5.5px; font-weight: 800; padding: 1px 4px; border-radius: 3px; letter-spacing: 0.3px; margin-right: 2px; }
+    .pos-gk { background: rgba(255,154,60,0.3); color: #FF9A3C; }
+    .pos-df { background: rgba(60,175,107,0.3); color: #3CAF6B; }
+    .pos-mf { background: rgba(60,154,255,0.3); color: #3C9AFF; }
+    .pos-fw { background: rgba(255,96,96,0.3);  color: #FF6060; }
+    .card-bottom-row { display: flex; align-items: center; justify-content: center; gap: 2px; flex-wrap: wrap; }
+
     /* Shimmer on owned special cards */
+    .card-item.owned .cat-golden-baller::before,
     .card-item.owned .cat-fan-fav::before,
     .card-item.owned .cat-icon::before,
     .card-item.owned .cat-goal-mach::before,
@@ -430,6 +441,9 @@
         <div class="section-title">By Category</div>
         <div class="category-list" id="stats-cat-list"></div>
 
+        <div class="section-title">By Position</div>
+        <div class="rarity-list" id="stats-pos-list"></div>
+
         <div class="section-title">Team Progress</div>
         <div class="rarity-list" id="stats-team-list"></div>
       </div>
@@ -470,620 +484,1050 @@
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-// ═══════════════════════════════════════════════════════════════
-// CARD DATA — 630 cards
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// CARD METADATA
+// ══════════════════════════════════════════════════
+const CAT_META = {
+  'golden-baller':{ label:'Golden Ballers',    icon:'🥇', rarity:'le',     color:'#F4C430', short:'Golden' },
+  'fan-fav':      { label:'Fan Favourites',    icon:'⭐', rarity:'ultra',  color:'#DA70D6', short:'Fan Fav' },
+  'crest':        { label:'Team Crests',       icon:'🛡️', rarity:'rare',   color:'#6495ED', short:'Crest' },
+  'icon':         { label:'Icons',             icon:'👑', rarity:'ultra',  color:'#DA70D6', short:'Icon' },
+  'hero':         { label:'Base Cards',        icon:'⚽', rarity:'common', color:'#8899AA', short:'Base' },
+  'contender':    { label:'Contenders',        icon:'🌐', rarity:'rare',   color:'#6495ED', short:'Contender' },
+  'top-keeper':   { label:'Top Keepers',       icon:'🧤', rarity:'ultra',  color:'#DA70D6', short:'Keeper' },
+  'def-rock':     { label:'Defensive Rocks',   icon:'🗿', rarity:'ultra',  color:'#DA70D6', short:'Defense' },
+  'midfield':     { label:'Midfield Maestros', icon:'🎼', rarity:'ultra',  color:'#DA70D6', short:'Midfield' },
+  'goal-mach':    { label:'Goal Machines',     icon:'⚡', rarity:'ultra',  color:'#DA70D6', short:'Goals' },
+  'rookie':       { label:'Master Rookies',    icon:'🌟', rarity:'rare',   color:'#6495ED', short:'Rookie' },
+  'mascot':       { label:'Mascots',           icon:'🎭', rarity:'rare',   color:'#6495ED', short:'Mascot' },
+  'eternos':      { label:'Eternos 22',        icon:'🏆', rarity:'le',     color:'#F4C430', short:'Eternos' },
+};
+
 const RARITIES = {
-  common:   { label: 'Common',         color: '#8899AA', dot: '#8899AA',  order: 1 },
-  rare:     { label: 'Rare',           color: '#6495ED', dot: '#6495ED',  order: 2 },
-  ultra:    { label: 'Ultra Rare',     color: '#DA70D6', dot: '#DA70D6',  order: 3 },
-  momentum: { label: 'Momentum',       color: '#FF6347', dot: '#FF6347',  order: 4 },
-  le:       { label: 'Limited Edition',color: '#F4C430', dot: '#F4C430',  order: 5 },
+  common: { label:'Common',          color:'#8899AA', order:1 },
+  rare:   { label:'Rare',            color:'#6495ED', order:2 },
+  ultra:  { label:'Ultra Rare',      color:'#DA70D6', order:3 },
+  le:     { label:'Limited Edition', color:'#F4C430', order:4 },
 };
 
-const CATEGORIES = {
-  'base':       { label: 'Base Cards',       icon: '⚽', rarity: 'common', color: '#8899AA' },
-  'team-crest': { label: 'Team Crests',      icon: '🛡️', rarity: 'rare',   color: '#6495ED' },
-  'mascot':     { label: 'Mascots',          icon: '🎭', rarity: 'rare',   color: '#6495ED' },
-  'contender':  { label: 'Contenders',       icon: '🎯', rarity: 'rare',   color: '#6495ED' },
-  'def-rock':   { label: 'Defensive Rocks',  icon: '🗿', rarity: 'ultra',  color: '#DA70D6' },
-  'fan-fav':    { label: 'Fan Favourites',   icon: '⭐', rarity: 'ultra',  color: '#DA70D6' },
-  'goal-mach':  { label: 'Goal Machines',    icon: '🎯', rarity: 'ultra',  color: '#DA70D6' },
-  'icon':       { label: 'Icons',            icon: '👑', rarity: 'ultra',  color: '#DA70D6' },
-  'rookies':    { label: 'Master Rookies',   icon: '🌟', rarity: 'rare',   color: '#6495ED' },
-  'midfield':   { label: 'Midfield Maestros',icon: '🎼', rarity: 'ultra',  color: '#DA70D6' },
-  'keeper':     { label: 'Team Keepers',     icon: '🧤', rarity: 'rare',   color: '#6495ED' },
+const POS_META = {
+  'GK':{ label:'Goalkeeper', color:'#FF9A3C' },
+  'DF':{ label:'Defender',   color:'#3CAF6B' },
+  'MF':{ label:'Midfielder', color:'#3C9AFF' },
+  'FW':{ label:'Forward',    color:'#FF6060' },
 };
 
-// ── Team data with flags and players (417 total players + 48 crests = 465) ──
-// 33 teams × 9 players + 15 teams × 8 players = 417
-const TEAMS_DATA = [
-  { name:'Algeria',     flag:'🇩🇿', conf:'CAF',      players:['Rais M\'Bolhi','Aissa Mandi','Ramy Bensebaini','Saïd Benrahma','Youcef Atal','Ismaël Bennacer','Andy Delort','Sofiane Feghouli'] }, // 8
-  { name:'Argentina',   flag:'🇦🇷', conf:'CONMEBOL', players:['Emiliano Martínez','Marcos Acuña','Rodrigo De Paul','Nicolás Otamendi','Cristian Romero','Lautaro Martínez','Julián Álvarez','Alexis Mac Allister','Lionel Messi'] }, // 9
-  { name:'Australia',   flag:'🇦🇺', conf:'AFC',      players:['Mat Ryan','Aziz Behich','Harry Souttar','Mitchell Duke','Aaron Mooy','Jackson Irvine','Mat Leckie','Martin Boyle','Craig Goodwin'] }, // 9
-  { name:'Austria',     flag:'🇦🇹', conf:'UEFA',     players:['Patrick Pentz','David Alaba','Florian Grillitsch','Marko Arnautovic','Marcel Sabitzer','Konrad Laimer','Christoph Baumgartner','Andreas Weimann'] }, // 8
-  { name:'Belgium',     flag:'🇧🇪', conf:'UEFA',     players:['Thibaut Courtois','Kevin De Bruyne','Romelu Lukaku','Youri Tielemans','Timothy Castagne','Jan Vertonghen','Leandro Trossard','Charles De Ketelaere','Amadou Onana'] }, // 9
-  { name:'Bosnia and Herzegovina',flag:'🇧🇦',conf:'UEFA',players:['Nikola Vasilj','Anel Ahmedhodzic','Edin Džeko','Benjamin Tahirović','Amar Dedić','Sead Kolašinac','Dario Šarić','Ermedin Demirović'] }, // 8
-  { name:'Brazil',      flag:'🇧🇷', conf:'CONMEBOL', players:['Alisson','Marquinhos','Thiago Silva','Vinicius Jr','Rodrygo','Lucas Paquetá','Casemiro','Raphinha','Richarlison'] }, // 9
-  { name:'Cabo Verde',  flag:'🇨🇻', conf:'CAF',      players:['Vozinha','Stopira','Diogo Gonçalves','Ryan Mendes','Patrick Andrade','Steven Fortes','Garry Rodrigues','Willy Semedo'] }, // 8
-  { name:'Canada',      flag:'🇨🇦', conf:'CONCACAF', players:['Milan Borjan','Alphonso Davies','Jonathan David','Cyle Larin','Tajon Buchanan','Jonathan Osorio','Stephen Eustáquio','Richie Laryea','Ismaël Koné'] }, // 9
-  { name:'Colombia',    flag:'🇨🇴', conf:'CONMEBOL', players:['David Ospina','James Rodríguez','Luis Díaz','Davinson Sánchez','Yerry Mina','Duván Zapata','Wilmar Barrios','Rafael Santos Borré','Richard Ríos'] }, // 9
-  { name:'Congo DR',    flag:'🇨🇩', conf:'CAF',      players:['Lionel Mpasi','Arthur Masuaku','Chancel Mbemba','Yannick Bolasie','Neeskens Kebano','Cédric Bakambu','Silas Wissa','Théo Bongonda'] }, // 8
-  { name:"Côte d'Ivoire", flag:'🇨🇮', conf:'CAF',   players:['Yahia Fofana','Serge Aurier','Willy Boly','Sébastien Haller','Nicolas Pépé','Frank Kessié','Emmanuel Gradel','Wilfried Zaha'] }, // 8
-  { name:'Croatia',     flag:'🇭🇷', conf:'UEFA',     players:['Dominik Livaković','Joško Gvardiol','Luka Modrić','Ivan Perišić','Mateo Kovačić','Mario Pašalić','Bruno Petković','Nikola Vlašić','Andrej Kramarić'] }, // 9
-  { name:'Curaçao',     flag:'🇨🇼', conf:'CONCACAF', players:['Eloy Room','Leandro Bacuna','Cuco Martina','Riechedly Bazoer','Juninho','Elson Hooi','Hedwiges Maduro','Rangelo Janga'] }, // 8
-  { name:'Czechia',     flag:'🇨🇿', conf:'UEFA',     players:['Jiří Staněk','Vladimír Coufal','Tomáš Souček','Patrik Schick','Ondřej Duda','Antonín Barák','Lukáš Provod','Adam Hložek'] }, // 8
-  { name:'Ecuador',     flag:'🇪🇨', conf:'CONMEBOL', players:['Hernán Galíndez','Pervis Estupiñán','Piero Hincapié','Moisés Caicedo','Carlos Gruezo','Enner Valencia','Michael Estrada','Kendry Páez','Jeremy Sarmiento'] }, // 9
-  { name:'Egypt',       flag:'🇪🇬', conf:'CAF',      players:['Mohamed El-Shenawy','Ahmed Hegazi','Mohamed Elneny','Mohamed Salah','Trezeguet','Mostafa Mohamed','Omar Marmoush','Amr El-Sulaya','Marwan Attia'] }, // 9
-  { name:'England',     flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', conf:'UEFA',  players:['Jordan Pickford','Jude Bellingham','Harry Kane','Phil Foden','Bukayo Saka','Declan Rice','Trent Alexander-Arnold','Kyle Walker','Cole Palmer'] }, // 9
-  { name:'France',      flag:'🇫🇷', conf:'UEFA',     players:['Mike Maignan','Kylian Mbappé','Antoine Griezmann','Ousmane Dembélé','Raphaël Varane','Aurélien Tchouaméni','Théo Hernandez','Eduardo Camavinga','Warren Zaïre-Emery'] }, // 9
-  { name:'Germany',     flag:'🇩🇪', conf:'UEFA',     players:['Manuel Neuer','Thomas Müller','Kai Havertz','Leroy Sané','Jamal Musiala','Joshua Kimmich','Antonio Rüdiger','Florian Wirtz','İlkay Gündoğan'] }, // 9
-  { name:'Ghana',       flag:'🇬🇭', conf:'CAF',      players:['Lawrence Ati-Zigi','Jordan Ayew','André Ayew','Thomas Partey','Iñaki Williams','Mohammed Kudus','Antoine Semenyo','Ernest Nuamah','Nico Williams'] }, // 9
-  { name:'Haiti',       flag:'🇭🇹', conf:'CONCACAF', players:['Josué Duverger','Mechack Jérôme','Wilde Donald Guerrier','Steeven Saba','Frantzdy Pierrot','Naica Raymonvil','Duckens Nazon','Derrick Etienne'] }, // 8
-  { name:'IR Iran',     flag:'🇮🇷', conf:'AFC',      players:['Alireza Beiranvand','Mehdi Taremi','Sardar Azmoun','Alireza Jahanbakhsh','Morteza Pouraliganji','Saman Ghoddos','Ali Gholizadeh','Ramin Rezaeian','Karim Ansarifard'] }, // 9
-  { name:'Iraq',        flag:'🇮🇶', conf:'AFC',      players:['Jalal Hachim','Bashar Rasan','Ali Adnan','Dhurgham Ismail','Aymen Hussein','Amjad Attwan','Humam Tariq','Ali Jasim','Safaa Hadi'] }, // 9
-  { name:'Japan',       flag:'🇯🇵', conf:'AFC',      players:['Shuichi Gonda','Takefusa Kubo','Kaoru Mitoma','Wataru Endō','Maya Yoshida','Ko Itakura','Daichi Kamada','Junya Ito','Ritsu Dōan'] }, // 9
-  { name:'Jordan',      flag:'🇯🇴', conf:'AFC',      players:['Yazeed Abo Layla','Musa Tamari','Besar Halimi','Ahmad Harbi','Salem Al-Ajalin','Yazan Al-Naimat','Mahmoud Al-Mardi','Ahmad Saleh'] }, // 8
-  { name:'Korea Republic',flag:'🇰🇷',conf:'AFC',    players:['Kim Seung-gyu','Son Heung-min','Kim Min-jae','Lee Kang-in','Hwang Hee-chan','Hwang In-beom','Jung Woo-young','Na Sang-ho','Oh Se-hun'] }, // 9
-  { name:'Mexico',      flag:'🇲🇽', conf:'CONCACAF', players:['Guillermo Ochoa','Hirving Lozano','Raúl Jiménez','Edson Álvarez','César Montes','Orbelín Pineda','Roberto Alvarado','Santiago Giménez','Kevin Álvarez'] }, // 9
-  { name:'Morocco',     flag:'🇲🇦', conf:'CAF',      players:['Yassine Bounou','Achraf Hakimi','Romain Saïss','Sofyan Amrabat','Hakim Ziyech','Youssef En-Nesyri','Sofiane Boufal','Azzedine Ounahi','Jawad El Yamiq'] }, // 9
-  { name:'Netherlands', flag:'🇳🇱', conf:'UEFA',     players:['Bart Verbruggen','Virgil van Dijk','Frenkie de Jong','Cody Gakpo','Denzel Dumfries','Nathan Aké','Xavi Simons','Tijjani Reijnders','Jeremie Frimpong'] }, // 9
-  { name:'New Zealand', flag:'🇳🇿', conf:'OFC',      players:['Joe Bell','Chris Wood','Liberato Cacace','Winston Reid','Sarpreet Singh','Matthew Garbett','Elijah Just','Ben Old'] }, // 8
-  { name:'Norway',      flag:'🇳🇴', conf:'UEFA',     players:['Ørjan Nyland','Erling Haaland','Martin Ødegaard','Alexander Sørloth','Sander Berge','Fredrik Aursnes','Leo Østigård','Kristian Thorstvedt'] }, // 8
-  { name:'Panama',      flag:'🇵🇦', conf:'CONCACAF', players:['Luis Mejía','Janer Quesada','Harold Cummings','Aníbal Godoy','Freddy Gondola','Ismael Díaz','José Fajardo','Rolando Blackburn','Édgar Bárcenas'] }, // 9
-  { name:'Paraguay',    flag:'🇵🇾', conf:'CONMEBOL', players:['Antony Silva','Gustavo Gómez','Carlos González','Óscar Romero','Ángel Romero','Miguel Almirón','Diego Gómez','Julio Enciso','Matías Rojas'] }, // 9
-  { name:'Portugal',    flag:'🇵🇹', conf:'UEFA',     players:['Diogo Costa','Cristiano Ronaldo','Bernardo Silva','Bruno Fernandes','João Cancelo','Rúben Dias','Nuno Mendes','Vitinha','Rafael Leão'] }, // 9
-  { name:'Qatar',       flag:'🇶🇦', conf:'AFC',      players:['Meshaal Barsham','Pedro Miguel','Bassam Al-Rawi','Assim Madibo','Hassan Al-Haydos','Akram Afif','Almoez Ali','Abdelkarim Hassan','Karim Boudiaf'] }, // 9
-  { name:'Saudi Arabia',flag:'🇸🇦', conf:'AFC',      players:['Mohammed Al-Owais','Salem Al-Dawsari','Mohammed Al-Burayk','Ali Al-Bulayhi','Firas Al-Buraikan','Sultan Al-Ghannam','Saleh Al-Shehri','Nasser Al-Dawsari'] }, // 8
-  { name:'Scotland',    flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿', conf:'UEFA',  players:['Angus Gunn','Andrew Robertson','Scott McTominay','Lyndon Dykes','Stuart Armstrong','John McGinn','Kenny McLean','Lawrence Shankland','Che Adams'] }, // 9
-  { name:'Senegal',     flag:'🇸🇳', conf:'CAF',      players:['Édouard Mendy','Sadio Mané','Kalidou Koulibaly','Idrissa Gueye','Pape Matar Sarr','Ismaïla Sarr','Habib Diallo','Boulaye Dia','Lamine Camara'] }, // 9
-  { name:'South Africa',flag:'🇿🇦', conf:'CAF',      players:['Ronwen Williams','Percy Tau','Themba Zwane','Yusuf Maart','Rushine De Reuck','Grant Kekana','Lyle Foster','Teboho Mokoena','Evidence Makgopa'] }, // 9
-  { name:'Spain',       flag:'🇪🇸', conf:'UEFA',     players:['David de Gea','Jordi Alba','Sergio Ramos','Rodri','Pedri','Gavi','Álvaro Morata','Ansu Fati','Ferran Torres','Nico Williams','Lamine Yamal'] }, // 11
-  { name:'Sweden',      flag:'🇸🇪', conf:'UEFA',     players:['Robin Olsen','Dejan Kulusevski','Alexander Isak','Emil Forsberg','Viktor Claesson','Mattias Svanberg','Robin Quaison','Alexander Milosevic'] }, // 8
-  { name:'Switzerland', flag:'🇨🇭', conf:'UEFA',     players:['Yann Sommer','Granit Xhaka','Xherdan Shaqiri','Denis Zakaria','Ricardo Rodriguez','Manuel Akanji','Breel Embolo','Ruben Vargas'] }, // 8
-  { name:'Tunisia',     flag:'🇹🇳', conf:'CAF',      players:['Aymen Dahmen','Montassar Talbi','Dylan Bronn','Ferjani Sassi','Anis Ben Slimane','Youssef Msakni','Wahbi Khazri','Seifeddine Jaziri'] }, // 8
-  { name:'Türkiye',     flag:'🇹🇷', conf:'UEFA',     players:['Uğurcan Çakır','Merih Demiral','Çağlar Söyüncü','Hakan Çalhanoğlu','Cengiz Ünder','Kenan Yıldız','Arda Güler','Kaan Ayhan','Orkun Kökçü'] }, // 9
-  { name:'Uruguay',     flag:'🇺🇾', conf:'CONMEBOL', players:['Fernando Muslera','Diego Godín','José María Giménez','Luis Suárez','Federico Valverde','Darwin Núñez','Rodrigo Bentancur','Ronald Araújo','Facundo Pellistri'] }, // 9
-  { name:'USA',         flag:'🇺🇸', conf:'CONCACAF', players:['Matt Turner','Christian Pulisic','Gio Reyna','Tyler Adams','Weston McKennie','Josh Sargent','Brenden Aaronson','Tim Weah','Yunus Musah'] }, // 9
-  { name:'Uzbekistan',  flag:'🇺🇿', conf:'AFC',      players:['Eldor Shomurodov','Jaloliddin Masharipov','Sherzod Nishonov','Abbosbek Fayzullaev','Otabek Shukurov','Jamshid Iskanderov','Husan Kholmatov','Bobur Abdixoliqov'] }, // 8
+const ALL_CARDS = [
+  {id:1,name:'Messi',team:'Argentina',flag:'🇦🇷',pos:'FW',cat:'golden-baller'},
+  {id:2,name:'Vinícius Júnior',team:'Brazil',flag:'🇧🇷',pos:'FW',cat:'golden-baller'},
+  {id:3,name:'Salah',team:'Egypt',flag:'🇪🇬',pos:'FW',cat:'golden-baller'},
+  {id:4,name:'Kane',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'FW',cat:'golden-baller'},
+  {id:5,name:'Mbappé',team:'France',flag:'🇫🇷',pos:'FW',cat:'golden-baller'},
+  {id:6,name:'Son',team:'Korea Republic',flag:'🇰🇷',pos:'FW',cat:'golden-baller'},
+  {id:7,name:'Haaland',team:'Norway',flag:'🇳🇴',pos:'FW',cat:'golden-baller'},
+  {id:8,name:'Ronaldo',team:'Portugal',flag:'🇵🇹',pos:'FW',cat:'golden-baller'},
+  {id:9,name:'Yamal',team:'Spain',flag:'🇪🇸',pos:'FW',cat:'golden-baller'},
+  {id:10,name:'Rayan Aït-Nouri',team:'Algeria',flag:'🇩🇿',pos:'DF',cat:'fan-fav'},
+  {id:11,name:'Algeria Crest',team:'Algeria',flag:'🇩🇿',pos:null,cat:'crest'},
+  {id:12,name:'Riyad Mahrez',team:'Algeria',flag:'🇩🇿',pos:'FW',cat:'icon'},
+  {id:13,name:'Alexis Guendouz',team:'Algeria',flag:'🇩🇿',pos:'MF',cat:'hero'},
+  {id:14,name:'Ramy Bensebaini',team:'Algeria',flag:'🇩🇿',pos:'DF',cat:'hero'},
+  {id:15,name:'Youcef Atal',team:'Algeria',flag:'🇩🇿',pos:'DF',cat:'hero'},
+  {id:16,name:'Aïssa Mandi',team:'Algeria',flag:'🇩🇿',pos:'DF',cat:'hero'},
+  {id:17,name:'Nabil Bentaleb',team:'Algeria',flag:'🇩🇿',pos:'MF',cat:'hero'},
+  {id:18,name:'Saïd Benrahma',team:'Algeria',flag:'🇩🇿',pos:'MF',cat:'hero'},
+  {id:19,name:'Amine Gouiri',team:'Algeria',flag:'🇩🇿',pos:'FW',cat:'hero'},
+  {id:20,name:'Mohamed Amoura',team:'Algeria',flag:'🇩🇿',pos:'FW',cat:'hero'},
+  {id:21,name:'Baghdad Bounedjah',team:'Algeria',flag:'🇩🇿',pos:'FW',cat:'hero'},
+  {id:22,name:'Julián Álvarez',team:'Argentina',flag:'🇦🇷',pos:'FW',cat:'fan-fav'},
+  {id:23,name:'Argentina Crest',team:'Argentina',flag:'🇦🇷',pos:null,cat:'crest'},
+  {id:24,name:'Lionel Messi',team:'Argentina',flag:'🇦🇷',pos:'FW',cat:'icon'},
+  {id:25,name:'Emiliano Martínez',team:'Argentina',flag:'🇦🇷',pos:'GK',cat:'hero'},
+  {id:26,name:'Nahuel Molina',team:'Argentina',flag:'🇦🇷',pos:'DF',cat:'hero'},
+  {id:27,name:'Cristian Romero',team:'Argentina',flag:'🇦🇷',pos:'DF',cat:'hero'},
+  {id:28,name:'Nicolás Otamendi',team:'Argentina',flag:'🇦🇷',pos:'DF',cat:'hero'},
+  {id:29,name:'Enzo Fernández',team:'Argentina',flag:'🇦🇷',pos:'MF',cat:'hero'},
+  {id:30,name:'Alexis Mac Allister',team:'Argentina',flag:'🇦🇷',pos:'MF',cat:'hero'},
+  {id:31,name:'Rodrigo De Paul',team:'Argentina',flag:'🇦🇷',pos:'MF',cat:'hero'},
+  {id:32,name:'Giuliano Simeone',team:'Argentina',flag:'🇦🇷',pos:'FW',cat:'hero'},
+  {id:33,name:'Lautaro Martínez',team:'Argentina',flag:'🇦🇷',pos:'FW',cat:'hero'},
+  {id:34,name:'Harry Souttar',team:'Australia',flag:'🇦🇺',pos:'DF',cat:'fan-fav'},
+  {id:35,name:'Australia Crest',team:'Australia',flag:'🇦🇺',pos:null,cat:'crest'},
+  {id:36,name:'Mathew Ryan',team:'Australia',flag:'🇦🇺',pos:'GK',cat:'icon'},
+  {id:37,name:'Alessandro Circati',team:'Australia',flag:'🇦🇺',pos:'DF',cat:'hero'},
+  {id:38,name:'Jordan Bos',team:'Australia',flag:'🇦🇺',pos:'DF',cat:'hero'},
+  {id:39,name:'Lewis Miller',team:'Australia',flag:'🇦🇺',pos:'DF',cat:'hero'},
+  {id:40,name:'Miloš Degenek',team:'Australia',flag:'🇦🇺',pos:'DF',cat:'hero'},
+  {id:41,name:'Jackson Irvine',team:'Australia',flag:'🇦🇺',pos:'MF',cat:'hero'},
+  {id:42,name:'Riley McGree',team:'Australia',flag:'🇦🇺',pos:'MF',cat:'hero'},
+  {id:43,name:'Aiden O\'Neill',team:'Australia',flag:'🇦🇺',pos:'MF',cat:'hero'},
+  {id:44,name:'Connor Metcalfe',team:'Australia',flag:'🇦🇺',pos:'MF',cat:'hero'},
+  {id:45,name:'Craig Goodwin',team:'Australia',flag:'🇦🇺',pos:'FW',cat:'hero'},
+  {id:46,name:'Marko Arnautović',team:'Austria',flag:'🇦🇹',pos:'FW',cat:'fan-fav'},
+  {id:47,name:'Austria Crest',team:'Austria',flag:'🇦🇹',pos:null,cat:'crest'},
+  {id:48,name:'David Alaba',team:'Austria',flag:'🇦🇹',pos:'DF',cat:'icon'},
+  {id:49,name:'Alexander Schlager',team:'Austria',flag:'🇦🇹',pos:'GK',cat:'hero'},
+  {id:50,name:'Kevin Danso',team:'Austria',flag:'🇦🇹',pos:'DF',cat:'hero'},
+  {id:51,name:'Philipp Lienhart',team:'Austria',flag:'🇦🇹',pos:'DF',cat:'hero'},
+  {id:52,name:'Konrad Laimer',team:'Austria',flag:'🇦🇹',pos:'MF',cat:'hero'},
+  {id:53,name:'Nicolas Seiwald',team:'Austria',flag:'🇦🇹',pos:'MF',cat:'hero'},
+  {id:54,name:'Marcel Sabitzer',team:'Austria',flag:'🇦🇹',pos:'MF',cat:'hero'},
+  {id:55,name:'Florian Grillitsch',team:'Austria',flag:'🇦🇹',pos:'MF',cat:'hero'},
+  {id:56,name:'Christoph Baumgartner',team:'Austria',flag:'🇦🇹',pos:'MF',cat:'hero'},
+  {id:57,name:'Michael Gregoritsch',team:'Austria',flag:'🇦🇹',pos:'FW',cat:'hero'},
+  {id:58,name:'Youri Tielemans',team:'Belgium',flag:'🇧🇪',pos:'MF',cat:'fan-fav'},
+  {id:59,name:'Belgium Crest',team:'Belgium',flag:'🇧🇪',pos:null,cat:'crest'},
+  {id:60,name:'Kevin De Bruyne',team:'Belgium',flag:'🇧🇪',pos:'MF',cat:'icon'},
+  {id:61,name:'Thibaut Courtois',team:'Belgium',flag:'🇧🇪',pos:'GK',cat:'hero'},
+  {id:62,name:'Arthur Theate',team:'Belgium',flag:'🇧🇪',pos:'DF',cat:'hero'},
+  {id:63,name:'Timothy Castagne',team:'Belgium',flag:'🇧🇪',pos:'DF',cat:'hero'},
+  {id:64,name:'Maxim De Cuyper',team:'Belgium',flag:'🇧🇪',pos:'DF',cat:'hero'},
+  {id:65,name:'Amadou Onana',team:'Belgium',flag:'🇧🇪',pos:'MF',cat:'hero'},
+  {id:66,name:'Jérémy Doku',team:'Belgium',flag:'🇧🇪',pos:'FW',cat:'hero'},
+  {id:67,name:'Charles De Ketelaere',team:'Belgium',flag:'🇧🇪',pos:'MF',cat:'hero'},
+  {id:68,name:'Leandro Trossard',team:'Belgium',flag:'🇧🇪',pos:'FW',cat:'hero'},
+  {id:69,name:'Romelu Lukaku',team:'Belgium',flag:'🇧🇪',pos:'FW',cat:'hero'},
+  {id:70,name:'Marquinhos',team:'Brazil',flag:'🇧🇷',pos:'DF',cat:'fan-fav'},
+  {id:71,name:'Brazil Crest',team:'Brazil',flag:'🇧🇷',pos:null,cat:'crest'},
+  {id:72,name:'Vinícius Júnior',team:'Brazil',flag:'🇧🇷',pos:'FW',cat:'icon'},
+  {id:73,name:'Alisson',team:'Brazil',flag:'🇧🇷',pos:'GK',cat:'hero'},
+  {id:74,name:'Danilo',team:'Brazil',flag:'🇧🇷',pos:'DF',cat:'hero'},
+  {id:75,name:'Éder Militão',team:'Brazil',flag:'🇧🇷',pos:'DF',cat:'hero'},
+  {id:76,name:'Gabriel Magalhães',team:'Brazil',flag:'🇧🇷',pos:'DF',cat:'hero'},
+  {id:77,name:'Casemiro',team:'Brazil',flag:'🇧🇷',pos:'MF',cat:'hero'},
+  {id:78,name:'Bruno Guimarães',team:'Brazil',flag:'🇧🇷',pos:'MF',cat:'hero'},
+  {id:79,name:'Rodrygo',team:'Brazil',flag:'🇧🇷',pos:'FW',cat:'hero'},
+  {id:80,name:'Matheus Cunha',team:'Brazil',flag:'🇧🇷',pos:'FW',cat:'hero'},
+  {id:81,name:'Raphinha',team:'Brazil',flag:'🇧🇷',pos:'FW',cat:'hero'},
+  {id:82,name:'Jonathan David',team:'Canada',flag:'🇨🇦',pos:'FW',cat:'fan-fav'},
+  {id:83,name:'Canada Crest',team:'Canada',flag:'🇨🇦',pos:null,cat:'crest'},
+  {id:84,name:'Alphonso Davies',team:'Canada',flag:'🇨🇦',pos:'DF',cat:'icon'},
+  {id:85,name:'Dayne St. Clair',team:'Canada',flag:'🇨🇦',pos:'GK',cat:'hero'},
+  {id:86,name:'Richie Laryea',team:'Canada',flag:'🇨🇦',pos:'DF',cat:'hero'},
+  {id:87,name:'Derek Cornelius',team:'Canada',flag:'🇨🇦',pos:'DF',cat:'hero'},
+  {id:88,name:'Stephen Eustáquio',team:'Canada',flag:'🇨🇦',pos:'MF',cat:'hero'},
+  {id:89,name:'Ismaël Koné',team:'Canada',flag:'🇨🇦',pos:'MF',cat:'hero'},
+  {id:90,name:'Jonathan Osorio',team:'Canada',flag:'🇨🇦',pos:'MF',cat:'hero'},
+  {id:91,name:'Jacob Shaffelburg',team:'Canada',flag:'🇨🇦',pos:'FW',cat:'hero'},
+  {id:92,name:'Tajon Buchanan',team:'Canada',flag:'🇨🇦',pos:'FW',cat:'hero'},
+  {id:93,name:'Cyle Larin',team:'Canada',flag:'🇨🇦',pos:'FW',cat:'hero'},
+  {id:94,name:'Vozinha',team:'Cape Verde',flag:'🇨🇻',pos:'GK',cat:'fan-fav'},
+  {id:95,name:'Cape Verde Crest',team:'Cape Verde',flag:'🇨🇻',pos:null,cat:'crest'},
+  {id:96,name:'Ryan Mendes',team:'Cape Verde',flag:'🇨🇻',pos:'FW',cat:'icon'},
+  {id:97,name:'Logan Costa',team:'Cape Verde',flag:'🇨🇻',pos:'DF',cat:'hero'},
+  {id:98,name:'Pico',team:'Cape Verde',flag:'🇨🇻',pos:'DF',cat:'hero'},
+  {id:99,name:'Steven Moreira',team:'Cape Verde',flag:'🇨🇻',pos:'DF',cat:'hero'},
+  {id:100,name:'João Paulo',team:'Cape Verde',flag:'🇨🇻',pos:'MF',cat:'hero'},
+  {id:101,name:'Kevin Pina',team:'Cape Verde',flag:'🇨🇻',pos:'MF',cat:'hero'},
+  {id:102,name:'Jamiro Monteiro',team:'Cape Verde',flag:'🇨🇻',pos:'MF',cat:'hero'},
+  {id:103,name:'Yannick Semedo',team:'Cape Verde',flag:'🇨🇻',pos:'MF',cat:'hero'},
+  {id:104,name:'Jovane Cabral',team:'Cape Verde',flag:'🇨🇻',pos:'FW',cat:'hero'},
+  {id:105,name:'Dailon Livramento',team:'Cape Verde',flag:'🇨🇻',pos:'FW',cat:'hero'},
+  {id:106,name:'Luis Díaz',team:'Colombia',flag:'🇨🇴',pos:'FW',cat:'fan-fav'},
+  {id:107,name:'Colombia Crest',team:'Colombia',flag:'🇨🇴',pos:null,cat:'crest'},
+  {id:108,name:'James Rodríguez',team:'Colombia',flag:'🇨🇴',pos:'MF',cat:'icon'},
+  {id:109,name:'Camilo Vargas',team:'Colombia',flag:'🇨🇴',pos:'GK',cat:'hero'},
+  {id:110,name:'Davinson Sánchez',team:'Colombia',flag:'🇨🇴',pos:'DF',cat:'hero'},
+  {id:111,name:'Yerry Mina',team:'Colombia',flag:'🇨🇴',pos:'DF',cat:'hero'},
+  {id:112,name:'Daniel Muñoz',team:'Colombia',flag:'🇨🇴',pos:'DF',cat:'hero'},
+  {id:113,name:'Jefferson Lerma',team:'Colombia',flag:'🇨🇴',pos:'MF',cat:'hero'},
+  {id:114,name:'Richard Ríos',team:'Colombia',flag:'🇨🇴',pos:'MF',cat:'hero'},
+  {id:115,name:'Juan Fernando Quintero',team:'Colombia',flag:'🇨🇴',pos:'MF',cat:'hero'},
+  {id:116,name:'Jhon Arias',team:'Colombia',flag:'🇨🇴',pos:'FW',cat:'hero'},
+  {id:117,name:'Luis Suárez',team:'Colombia',flag:'🇨🇴',pos:'FW',cat:'hero'},
+  {id:118,name:'Ivan Perišić',team:'Croatia',flag:'🇭🇷',pos:'FW',cat:'fan-fav'},
+  {id:119,name:'Croatia Crest',team:'Croatia',flag:'🇭🇷',pos:null,cat:'crest'},
+  {id:120,name:'Luka Modrić',team:'Croatia',flag:'🇭🇷',pos:'MF',cat:'icon'},
+  {id:121,name:'Dominik Livaković',team:'Croatia',flag:'🇭🇷',pos:'GK',cat:'hero'},
+  {id:122,name:'Duje Ćaleta-Car',team:'Croatia',flag:'🇭🇷',pos:'DF',cat:'hero'},
+  {id:123,name:'Joško Gvardiol',team:'Croatia',flag:'🇭🇷',pos:'DF',cat:'hero'},
+  {id:124,name:'Josip Stanišić',team:'Croatia',flag:'🇭🇷',pos:'DF',cat:'hero'},
+  {id:125,name:'Mateo Kovačić',team:'Croatia',flag:'🇭🇷',pos:'MF',cat:'hero'},
+  {id:126,name:'Lovro Majer',team:'Croatia',flag:'🇭🇷',pos:'MF',cat:'hero'},
+  {id:127,name:'Mario Pašalić',team:'Croatia',flag:'🇭🇷',pos:'MF',cat:'hero'},
+  {id:128,name:'Ante Budimir',team:'Croatia',flag:'🇭🇷',pos:'FW',cat:'hero'},
+  {id:129,name:'Andrej Kramarić',team:'Croatia',flag:'🇭🇷',pos:'FW',cat:'hero'},
+  {id:130,name:'Jurien Timber',team:'Curaçao',flag:'🇨🇼',pos:'DF',cat:'fan-fav'},
+  {id:131,name:'Curaçao Crest',team:'Curaçao',flag:'🇨🇼',pos:null,cat:'crest'},
+  {id:132,name:'Leandro Bacuna',team:'Curaçao',flag:'🇨🇼',pos:'MF',cat:'icon'},
+  {id:133,name:'Eloy Room',team:'Curaçao',flag:'🇨🇼',pos:'GK',cat:'hero'},
+  {id:134,name:'Sherel Floranus',team:'Curaçao',flag:'🇨🇼',pos:'DF',cat:'hero'},
+  {id:135,name:'Roshon van Eijma',team:'Curaçao',flag:'🇨🇼',pos:'DF',cat:'hero'},
+  {id:136,name:'Armando Obispo',team:'Curaçao',flag:'🇨🇼',pos:'DF',cat:'hero'},
+  {id:137,name:'Livano Comenencia',team:'Curaçao',flag:'🇨🇼',pos:'MF',cat:'hero'},
+  {id:138,name:'Juninho Bacuna',team:'Curaçao',flag:'🇨🇼',pos:'MF',cat:'hero'},
+  {id:139,name:'Kenji Gorre',team:'Curaçao',flag:'🇨🇼',pos:'MF',cat:'hero'},
+  {id:140,name:'Sontje Hansen',team:'Curaçao',flag:'🇨🇼',pos:'FW',cat:'hero'},
+  {id:141,name:'Jearl Margaritha',team:'Curaçao',flag:'🇨🇼',pos:'FW',cat:'hero'},
+  {id:142,name:'Moisés Caicedo',team:'Ecuador',flag:'🇪🇨',pos:'MF',cat:'fan-fav'},
+  {id:143,name:'Ecuador Crest',team:'Ecuador',flag:'🇪🇨',pos:null,cat:'crest'},
+  {id:144,name:'Enner Valencia',team:'Ecuador',flag:'🇪🇨',pos:'FW',cat:'icon'},
+  {id:145,name:'Hernán Galíndez',team:'Ecuador',flag:'🇪🇨',pos:'GK',cat:'hero'},
+  {id:146,name:'Piero Hincapié',team:'Ecuador',flag:'🇪🇨',pos:'DF',cat:'hero'},
+  {id:147,name:'Pervis Estupiñán',team:'Ecuador',flag:'🇪🇨',pos:'DF',cat:'hero'},
+  {id:148,name:'Willian Pacho',team:'Ecuador',flag:'🇪🇨',pos:'DF',cat:'hero'},
+  {id:149,name:'Ángelo Preciado',team:'Ecuador',flag:'🇪🇨',pos:'DF',cat:'hero'},
+  {id:150,name:'Joël Ordóñez',team:'Ecuador',flag:'🇪🇨',pos:'MF',cat:'hero'},
+  {id:151,name:'Alan Franco',team:'Ecuador',flag:'🇪🇨',pos:'MF',cat:'hero'},
+  {id:152,name:'Gonzalo Plata',team:'Ecuador',flag:'🇪🇨',pos:'FW',cat:'hero'},
+  {id:153,name:'Kevin Rodríguez',team:'Ecuador',flag:'🇪🇨',pos:'FW',cat:'hero'},
+  {id:154,name:'Omar Marmoush',team:'Egypt',flag:'🇪🇬',pos:'FW',cat:'fan-fav'},
+  {id:155,name:'Egypt Crest',team:'Egypt',flag:'🇪🇬',pos:null,cat:'crest'},
+  {id:156,name:'Mohamed Salah',team:'Egypt',flag:'🇪🇬',pos:'FW',cat:'icon'},
+  {id:157,name:'Mohamed El-Shenawy',team:'Egypt',flag:'🇪🇬',pos:'GK',cat:'hero'},
+  {id:158,name:'Mohamed Hany',team:'Egypt',flag:'🇪🇬',pos:'DF',cat:'hero'},
+  {id:159,name:'Mohamed Abdelmonem',team:'Egypt',flag:'🇪🇬',pos:'DF',cat:'hero'},
+  {id:160,name:'Ramy Rabia',team:'Egypt',flag:'🇪🇬',pos:'DF',cat:'hero'},
+  {id:161,name:'Marwan Attia',team:'Egypt',flag:'🇪🇬',pos:'MF',cat:'hero'},
+  {id:162,name:'Zizo',team:'Egypt',flag:'🇪🇬',pos:'MF',cat:'hero'},
+  {id:163,name:'Hamdy Fathy',team:'Egypt',flag:'🇪🇬',pos:'MF',cat:'hero'},
+  {id:164,name:'Mostafa Mohamed',team:'Egypt',flag:'🇪🇬',pos:'FW',cat:'hero'},
+  {id:165,name:'Trezeguet',team:'Egypt',flag:'🇪🇬',pos:'FW',cat:'hero'},
+  {id:166,name:'Jude Bellingham',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'MF',cat:'fan-fav'},
+  {id:167,name:'England Crest',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:null,cat:'crest'},
+  {id:168,name:'Harry Kane',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'FW',cat:'icon'},
+  {id:169,name:'Jordan Pickford',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'GK',cat:'hero'},
+  {id:170,name:'Reece James',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'DF',cat:'hero'},
+  {id:171,name:'John Stones',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'DF',cat:'hero'},
+  {id:172,name:'Declan Rice',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'MF',cat:'hero'},
+  {id:173,name:'Jordan Henderson',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'MF',cat:'hero'},
+  {id:174,name:'Phil Foden',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'MF',cat:'hero'},
+  {id:175,name:'Bukayo Saka',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'FW',cat:'hero'},
+  {id:176,name:'Cole Palmer',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'FW',cat:'hero'},
+  {id:177,name:'Marcus Rashford',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'FW',cat:'hero'},
+  {id:178,name:'Ousmane Dembélé',team:'France',flag:'🇫🇷',pos:'FW',cat:'fan-fav'},
+  {id:179,name:'France Crest',team:'France',flag:'🇫🇷',pos:null,cat:'crest'},
+  {id:180,name:'Kylian Mbappé',team:'France',flag:'🇫🇷',pos:'FW',cat:'icon'},
+  {id:181,name:'Mike Maignan',team:'France',flag:'🇫🇷',pos:'GK',cat:'hero'},
+  {id:182,name:'William Saliba',team:'France',flag:'🇫🇷',pos:'DF',cat:'hero'},
+  {id:183,name:'Jules Koundé',team:'France',flag:'🇫🇷',pos:'DF',cat:'hero'},
+  {id:184,name:'Théo Hernandez',team:'France',flag:'🇫🇷',pos:'DF',cat:'hero'},
+  {id:185,name:'Aurélien Tchouaméni',team:'France',flag:'🇫🇷',pos:'MF',cat:'hero'},
+  {id:186,name:'Eduardo Camavinga',team:'France',flag:'🇫🇷',pos:'MF',cat:'hero'},
+  {id:187,name:'Bradley Barcola',team:'France',flag:'🇫🇷',pos:'FW',cat:'hero'},
+  {id:188,name:'Marcus Thuram',team:'France',flag:'🇫🇷',pos:'FW',cat:'hero'},
+  {id:189,name:'Randal Kolo Muani',team:'France',flag:'🇫🇷',pos:'FW',cat:'hero'},
+  {id:190,name:'Jamal Musiala',team:'Germany',flag:'🇩🇪',pos:'MF',cat:'fan-fav'},
+  {id:191,name:'Germany Crest',team:'Germany',flag:'🇩🇪',pos:null,cat:'crest'},
+  {id:192,name:'Joshua Kimmich',team:'Germany',flag:'🇩🇪',pos:'MF',cat:'icon'},
+  {id:193,name:'Marc-André ter Stegen',team:'Germany',flag:'🇩🇪',pos:'GK',cat:'hero'},
+  {id:194,name:'Antonio Rüdiger',team:'Germany',flag:'🇩🇪',pos:'DF',cat:'hero'},
+  {id:195,name:'Jonathan Tah',team:'Germany',flag:'🇩🇪',pos:'DF',cat:'hero'},
+  {id:196,name:'Félix Nmecha',team:'Germany',flag:'🇩🇪',pos:'MF',cat:'hero'},
+  {id:197,name:'Leon Goretzka',team:'Germany',flag:'🇩🇪',pos:'MF',cat:'hero'},
+  {id:198,name:'Florian Wirtz',team:'Germany',flag:'🇩🇪',pos:'MF',cat:'hero'},
+  {id:199,name:'Serge Gnabry',team:'Germany',flag:'🇩🇪',pos:'FW',cat:'hero'},
+  {id:200,name:'Kai Havertz',team:'Germany',flag:'🇩🇪',pos:'FW',cat:'hero'},
+  {id:201,name:'Leroy Sané',team:'Germany',flag:'🇩🇪',pos:'FW',cat:'hero'},
+  {id:202,name:'Thomas Partey',team:'Ghana',flag:'🇬🇭',pos:'MF',cat:'fan-fav'},
+  {id:203,name:'Ghana Crest',team:'Ghana',flag:'🇬🇭',pos:null,cat:'crest'},
+  {id:204,name:'Mohammed Kudus',team:'Ghana',flag:'🇬🇭',pos:'FW',cat:'icon'},
+  {id:205,name:'Lawrence Ati-Zigi',team:'Ghana',flag:'🇬🇭',pos:'GK',cat:'hero'},
+  {id:206,name:'Alidu Seidu',team:'Ghana',flag:'🇬🇭',pos:'DF',cat:'hero'},
+  {id:207,name:'Alexander Djiku',team:'Ghana',flag:'🇬🇭',pos:'DF',cat:'hero'},
+  {id:208,name:'Gideon Mensah',team:'Ghana',flag:'🇬🇭',pos:'DF',cat:'hero'},
+  {id:209,name:'Caleb Ekuban',team:'Ghana',flag:'🇬🇭',pos:'FW',cat:'hero'},
+  {id:210,name:'Abdul Fatawu Issahaku',team:'Ghana',flag:'🇬🇭',pos:'FW',cat:'hero'},
+  {id:211,name:'Kamaldeen Sulemana',team:'Ghana',flag:'🇬🇭',pos:'FW',cat:'hero'},
+  {id:212,name:'Jordan Ayew',team:'Ghana',flag:'🇬🇭',pos:'FW',cat:'hero'},
+  {id:213,name:'Antoine Semenyo',team:'Ghana',flag:'🇬🇭',pos:'FW',cat:'hero'},
+  {id:214,name:'Frantz Dypierre',team:'Haiti',flag:'🇭🇹',pos:'FW',cat:'fan-fav'},
+  {id:215,name:'Haiti Crest',team:'Haiti',flag:'🇭🇹',pos:null,cat:'crest'},
+  {id:216,name:'Duckens Nazon',team:'Haiti',flag:'🇭🇹',pos:'FW',cat:'icon'},
+  {id:217,name:'Johny Placide',team:'Haiti',flag:'🇭🇹',pos:'GK',cat:'hero'},
+  {id:218,name:'Ricardo Ade',team:'Haiti',flag:'🇭🇹',pos:'DF',cat:'hero'},
+  {id:219,name:'Carlens Arcus',team:'Haiti',flag:'🇭🇹',pos:'DF',cat:'hero'},
+  {id:220,name:'Hannes Delcroix',team:'Haiti',flag:'🇭🇹',pos:'DF',cat:'hero'},
+  {id:221,name:'Leverton Pierre',team:'Haiti',flag:'🇭🇹',pos:'DF',cat:'hero'},
+  {id:222,name:'Danley Jean Jacques',team:'Haiti',flag:'🇭🇹',pos:'MF',cat:'hero'},
+  {id:223,name:'Jean-Ricner Bellegarde',team:'Haiti',flag:'🇭🇹',pos:'MF',cat:'hero'},
+  {id:224,name:'Ruben Providence',team:'Haiti',flag:'🇭🇹',pos:'MF',cat:'hero'},
+  {id:225,name:'Dondé Edson Louisius',team:'Haiti',flag:'🇭🇹',pos:'FW',cat:'hero'},
+  {id:226,name:'Mehdi Taremi',team:'Iran',flag:'🇮🇷',pos:'FW',cat:'fan-fav'},
+  {id:227,name:'Iran Crest',team:'Iran',flag:'🇮🇷',pos:null,cat:'crest'},
+  {id:228,name:'Sardar Azmoun',team:'Iran',flag:'🇮🇷',pos:'FW',cat:'icon'},
+  {id:229,name:'Alireza Beiranvand',team:'Iran',flag:'🇮🇷',pos:'GK',cat:'hero'},
+  {id:230,name:'Shoja Khalilzadeh',team:'Iran',flag:'🇮🇷',pos:'DF',cat:'hero'},
+  {id:231,name:'Milad Mohammadi',team:'Iran',flag:'🇮🇷',pos:'DF',cat:'hero'},
+  {id:232,name:'Ramin Rezaeian',team:'Iran',flag:'🇮🇷',pos:'DF',cat:'hero'},
+  {id:233,name:'Hossein Kanaani',team:'Iran',flag:'🇮🇷',pos:'MF',cat:'hero'},
+  {id:234,name:'Saeid Ezatolahi',team:'Iran',flag:'🇮🇷',pos:'MF',cat:'hero'},
+  {id:235,name:'Saman Ghoddos',team:'Iran',flag:'🇮🇷',pos:'MF',cat:'hero'},
+  {id:236,name:'Mohammad Mohebi',team:'Iran',flag:'🇮🇷',pos:'FW',cat:'hero'},
+  {id:237,name:'Alireza Jahanbakhsh',team:'Iran',flag:'🇮🇷',pos:'FW',cat:'hero'},
+  {id:238,name:'Franck Kessié',team:'Ivory Coast',flag:'🇨🇮',pos:'MF',cat:'fan-fav'},
+  {id:239,name:'Ivory Coast Crest',team:'Ivory Coast',flag:'🇨🇮',pos:null,cat:'crest'},
+  {id:240,name:'Sébastien Haller',team:'Ivory Coast',flag:'🇨🇮',pos:'FW',cat:'icon'},
+  {id:241,name:'Yahia Fofana',team:'Ivory Coast',flag:'🇨🇮',pos:'GK',cat:'hero'},
+  {id:242,name:'Ghislain Konan',team:'Ivory Coast',flag:'🇨🇮',pos:'DF',cat:'hero'},
+  {id:243,name:'Odilon Kossounou',team:'Ivory Coast',flag:'🇨🇮',pos:'DF',cat:'hero'},
+  {id:244,name:'Evan N\'Dicka',team:'Ivory Coast',flag:'🇨🇮',pos:'DF',cat:'hero'},
+  {id:245,name:'Wilfried Singo',team:'Ivory Coast',flag:'🇨🇮',pos:'DF',cat:'hero'},
+  {id:246,name:'Ibrahim Sangaré',team:'Ivory Coast',flag:'🇨🇮',pos:'MF',cat:'hero'},
+  {id:247,name:'Nicolas Pépé',team:'Ivory Coast',flag:'🇨🇮',pos:'FW',cat:'hero'},
+  {id:248,name:'Simon Adingra',team:'Ivory Coast',flag:'🇨🇮',pos:'FW',cat:'hero'},
+  {id:249,name:'Oumar Diakité',team:'Ivory Coast',flag:'🇨🇮',pos:'FW',cat:'hero'},
+  {id:250,name:'Takumi Minamino',team:'Japan',flag:'🇯🇵',pos:'FW',cat:'fan-fav'},
+  {id:251,name:'Japan Crest',team:'Japan',flag:'🇯🇵',pos:null,cat:'crest'},
+  {id:252,name:'Takefusa Kubo',team:'Japan',flag:'🇯🇵',pos:'FW',cat:'icon'},
+  {id:253,name:'Zion Suzuki',team:'Japan',flag:'🇯🇵',pos:'GK',cat:'hero'},
+  {id:254,name:'Tsuyoshi Watanabe',team:'Japan',flag:'🇯🇵',pos:'DF',cat:'hero'},
+  {id:255,name:'Kaishu Sano',team:'Japan',flag:'🇯🇵',pos:'DF',cat:'hero'},
+  {id:256,name:'Ao Tanaka',team:'Japan',flag:'🇯🇵',pos:'MF',cat:'hero'},
+  {id:257,name:'Daichi Kamada',team:'Japan',flag:'🇯🇵',pos:'MF',cat:'hero'},
+  {id:258,name:'Ritsu Doan',team:'Japan',flag:'🇯🇵',pos:'MF',cat:'hero'},
+  {id:259,name:'Keito Nakamura',team:'Japan',flag:'🇯🇵',pos:'FW',cat:'hero'},
+  {id:260,name:'Shuto Machino',team:'Japan',flag:'🇯🇵',pos:'FW',cat:'hero'},
+  {id:261,name:'Ayase Ueda',team:'Japan',flag:'🇯🇵',pos:'FW',cat:'hero'},
+  {id:262,name:'Yazan Al-Naimat',team:'Jordan',flag:'🇯🇴',pos:'MF',cat:'fan-fav'},
+  {id:263,name:'Jordan Crest',team:'Jordan',flag:'🇯🇴',pos:null,cat:'crest'},
+  {id:264,name:'Musa Al-Tamari',team:'Jordan',flag:'🇯🇴',pos:'FW',cat:'icon'},
+  {id:265,name:'Yazeed Abulaila',team:'Jordan',flag:'🇯🇴',pos:'GK',cat:'hero'},
+  {id:266,name:'Mohammad Abuhashish',team:'Jordan',flag:'🇯🇴',pos:'DF',cat:'hero'},
+  {id:267,name:'Yazan Al-Arab',team:'Jordan',flag:'🇯🇴',pos:'DF',cat:'hero'},
+  {id:268,name:'Abdallah Nasib',team:'Jordan',flag:'🇯🇴',pos:'DF',cat:'hero'},
+  {id:269,name:'Ibrahim Saadeh',team:'Jordan',flag:'🇯🇴',pos:'MF',cat:'hero'},
+  {id:270,name:'Nizar Al-Rashdan',team:'Jordan',flag:'🇯🇴',pos:'MF',cat:'hero'},
+  {id:271,name:'Noor Al-Rawabdeh',team:'Jordan',flag:'🇯🇴',pos:'MF',cat:'hero'},
+  {id:272,name:'Mahmoud Al-Mardi',team:'Jordan',flag:'🇯🇴',pos:'FW',cat:'hero'},
+  {id:273,name:'Ali Olwan',team:'Jordan',flag:'🇯🇴',pos:'FW',cat:'hero'},
+  {id:274,name:'Min-jae Kim',team:'Korea Republic',flag:'🇰🇷',pos:'DF',cat:'fan-fav'},
+  {id:275,name:'Korea Republic Crest',team:'Korea Republic',flag:'🇰🇷',pos:null,cat:'crest'},
+  {id:276,name:'Heung-min Son',team:'Korea Republic',flag:'🇰🇷',pos:'FW',cat:'icon'},
+  {id:277,name:'Hyeon-woo Jo',team:'Korea Republic',flag:'🇰🇷',pos:'GK',cat:'hero'},
+  {id:278,name:'Young-woo Seol',team:'Korea Republic',flag:'🇰🇷',pos:'DF',cat:'hero'},
+  {id:279,name:'Yu-min Cho',team:'Korea Republic',flag:'🇰🇷',pos:'DF',cat:'hero'},
+  {id:280,name:'Taeseok Lee',team:'Korea Republic',flag:'🇰🇷',pos:'MF',cat:'hero'},
+  {id:281,name:'In-beom Hwang',team:'Korea Republic',flag:'🇰🇷',pos:'MF',cat:'hero'},
+  {id:282,name:'Jae-sung Lee',team:'Korea Republic',flag:'🇰🇷',pos:'MF',cat:'hero'},
+  {id:283,name:'Kangin Lee',team:'Korea Republic',flag:'🇰🇷',pos:'MF',cat:'hero'},
+  {id:284,name:'Hyeonggyu Oh',team:'Korea Republic',flag:'🇰🇷',pos:'FW',cat:'hero'},
+  {id:285,name:'Heechan Hwang',team:'Korea Republic',flag:'🇰🇷',pos:'FW',cat:'hero'},
+  {id:286,name:'Edson Álvarez',team:'Mexico',flag:'🇲🇽',pos:'MF',cat:'fan-fav'},
+  {id:287,name:'Mexico Crest',team:'Mexico',flag:'🇲🇽',pos:null,cat:'crest'},
+  {id:288,name:'Raúl Jiménez',team:'Mexico',flag:'🇲🇽',pos:'FW',cat:'icon'},
+  {id:289,name:'Luis Malagón',team:'Mexico',flag:'🇲🇽',pos:'GK',cat:'hero'},
+  {id:290,name:'Israel Reyes',team:'Mexico',flag:'🇲🇽',pos:'DF',cat:'hero'},
+  {id:291,name:'Johan Vásquez',team:'Mexico',flag:'🇲🇽',pos:'DF',cat:'hero'},
+  {id:292,name:'César Montes',team:'Mexico',flag:'🇲🇽',pos:'DF',cat:'hero'},
+  {id:293,name:'Jesús Gallardo',team:'Mexico',flag:'🇲🇽',pos:'DF',cat:'hero'},
+  {id:294,name:'Carlos Rodríguez',team:'Mexico',flag:'🇲🇽',pos:'MF',cat:'hero'},
+  {id:295,name:'Orbelín Pineda',team:'Mexico',flag:'🇲🇽',pos:'MF',cat:'hero'},
+  {id:296,name:'Hirving Lozano',team:'Mexico',flag:'🇲🇽',pos:'FW',cat:'hero'},
+  {id:297,name:'Santiago Giménez',team:'Mexico',flag:'🇲🇽',pos:'FW',cat:'hero'},
+  {id:298,name:'Youssef En-Nesyri',team:'Morocco',flag:'🇲🇦',pos:'FW',cat:'fan-fav'},
+  {id:299,name:'Morocco Crest',team:'Morocco',flag:'🇲🇦',pos:null,cat:'crest'},
+  {id:300,name:'Achraf Hakimi',team:'Morocco',flag:'🇲🇦',pos:'DF',cat:'icon'},
+  {id:301,name:'Yassine Bounou',team:'Morocco',flag:'🇲🇦',pos:'GK',cat:'hero'},
+  {id:302,name:'Noussair Mazraoui',team:'Morocco',flag:'🇲🇦',pos:'DF',cat:'hero'},
+  {id:303,name:'Nayef Aguerd',team:'Morocco',flag:'🇲🇦',pos:'DF',cat:'hero'},
+  {id:304,name:'Sofyan Amrabat',team:'Morocco',flag:'🇲🇦',pos:'MF',cat:'hero'},
+  {id:305,name:'Eliesse Ben Seghir',team:'Morocco',flag:'🇲🇦',pos:'MF',cat:'hero'},
+  {id:306,name:'Ismaël Saibari',team:'Morocco',flag:'🇲🇦',pos:'MF',cat:'hero'},
+  {id:307,name:'Brahim Díaz',team:'Morocco',flag:'🇲🇦',pos:'FW',cat:'hero'},
+  {id:308,name:'Abde Ezzalzouli',team:'Morocco',flag:'🇲🇦',pos:'FW',cat:'hero'},
+  {id:309,name:'Ayoub El Kaabi',team:'Morocco',flag:'🇲🇦',pos:'FW',cat:'hero'},
+  {id:310,name:'Memphis Depay',team:'Netherlands',flag:'🇳🇱',pos:'FW',cat:'fan-fav'},
+  {id:311,name:'Netherlands Crest',team:'Netherlands',flag:'🇳🇱',pos:null,cat:'crest'},
+  {id:312,name:'Virgil van Dijk',team:'Netherlands',flag:'🇳🇱',pos:'DF',cat:'icon'},
+  {id:313,name:'Bart Verbruggen',team:'Netherlands',flag:'🇳🇱',pos:'GK',cat:'hero'},
+  {id:314,name:'Nathan Aké',team:'Netherlands',flag:'🇳🇱',pos:'DF',cat:'hero'},
+  {id:315,name:'Jeremie Frimpong',team:'Netherlands',flag:'🇳🇱',pos:'DF',cat:'hero'},
+  {id:316,name:'Denzel Dumfries',team:'Netherlands',flag:'🇳🇱',pos:'DF',cat:'hero'},
+  {id:317,name:'Tijjani Reijnders',team:'Netherlands',flag:'🇳🇱',pos:'MF',cat:'hero'},
+  {id:318,name:'Ryan Gravenberch',team:'Netherlands',flag:'🇳🇱',pos:'MF',cat:'hero'},
+  {id:319,name:'Cody Gakpo',team:'Netherlands',flag:'🇳🇱',pos:'FW',cat:'hero'},
+  {id:320,name:'Donyell Malen',team:'Netherlands',flag:'🇳🇱',pos:'FW',cat:'hero'},
+  {id:321,name:'Wout Weghorst',team:'Netherlands',flag:'🇳🇱',pos:'FW',cat:'hero'},
+  {id:322,name:'Marko Stamenic',team:'New Zealand',flag:'🇳🇿',pos:'MF',cat:'fan-fav'},
+  {id:323,name:'New Zealand Crest',team:'New Zealand',flag:'🇳🇿',pos:null,cat:'crest'},
+  {id:324,name:'Chris Wood',team:'New Zealand',flag:'🇳🇿',pos:'FW',cat:'icon'},
+  {id:325,name:'Max Crocombe',team:'New Zealand',flag:'🇳🇿',pos:'GK',cat:'hero'},
+  {id:326,name:'Michael Boxall',team:'New Zealand',flag:'🇳🇿',pos:'DF',cat:'hero'},
+  {id:327,name:'Liberato Cacace',team:'New Zealand',flag:'🇳🇿',pos:'DF',cat:'hero'},
+  {id:328,name:'Tim Payne',team:'New Zealand',flag:'🇳🇿',pos:'DF',cat:'hero'},
+  {id:329,name:'Finn Surman',team:'New Zealand',flag:'🇳🇿',pos:'MF',cat:'hero'},
+  {id:330,name:'Joe Bell',team:'New Zealand',flag:'🇳🇿',pos:'MF',cat:'hero'},
+  {id:331,name:'Sarpreet Singh',team:'New Zealand',flag:'🇳🇿',pos:'MF',cat:'hero'},
+  {id:332,name:'Matt Garbett',team:'New Zealand',flag:'🇳🇿',pos:'MF',cat:'hero'},
+  {id:333,name:'Elijah Just',team:'New Zealand',flag:'🇳🇿',pos:'FW',cat:'hero'},
+  {id:334,name:'Martin Ødegaard',team:'Norway',flag:'🇳🇴',pos:'MF',cat:'fan-fav'},
+  {id:335,name:'Norway Crest',team:'Norway',flag:'🇳🇴',pos:null,cat:'crest'},
+  {id:336,name:'Erling Haaland',team:'Norway',flag:'🇳🇴',pos:'FW',cat:'icon'},
+  {id:337,name:'Ørjan Nyland',team:'Norway',flag:'🇳🇴',pos:'GK',cat:'hero'},
+  {id:338,name:'Julian Ryerson',team:'Norway',flag:'🇳🇴',pos:'DF',cat:'hero'},
+  {id:339,name:'Kristoffer Ajer',team:'Norway',flag:'🇳🇴',pos:'DF',cat:'hero'},
+  {id:340,name:'David Møller Wolfe',team:'Norway',flag:'🇳🇴',pos:'DF',cat:'hero'},
+  {id:341,name:'Sander Berge',team:'Norway',flag:'🇳🇴',pos:'MF',cat:'hero'},
+  {id:342,name:'Patrick Berg',team:'Norway',flag:'🇳🇴',pos:'MF',cat:'hero'},
+  {id:343,name:'Antonio Nusa',team:'Norway',flag:'🇳🇴',pos:'FW',cat:'hero'},
+  {id:344,name:'Oscar Bobb',team:'Norway',flag:'🇳🇴',pos:'FW',cat:'hero'},
+  {id:345,name:'Alexander Sørloth',team:'Norway',flag:'🇳🇴',pos:'FW',cat:'hero'},
+  {id:346,name:'Michael Amir Murillo',team:'Panama',flag:'🇵🇦',pos:'DF',cat:'fan-fav'},
+  {id:347,name:'Panama Crest',team:'Panama',flag:'🇵🇦',pos:null,cat:'crest'},
+  {id:348,name:'Aníbal Godoy',team:'Panama',flag:'🇵🇦',pos:'MF',cat:'icon'},
+  {id:349,name:'Orlando Mosquera',team:'Panama',flag:'🇵🇦',pos:'GK',cat:'hero'},
+  {id:350,name:'Andrés Andrade',team:'Panama',flag:'🇵🇦',pos:'DF',cat:'hero'},
+  {id:351,name:'Fidel Escobar',team:'Panama',flag:'🇵🇦',pos:'DF',cat:'hero'},
+  {id:352,name:'Cristian Martínez',team:'Panama',flag:'🇵🇦',pos:'DF',cat:'hero'},
+  {id:353,name:'Adalberto Carrasquilla',team:'Panama',flag:'🇵🇦',pos:'MF',cat:'hero'},
+  {id:354,name:'Édgar Bárcenas',team:'Panama',flag:'🇵🇦',pos:'MF',cat:'hero'},
+  {id:355,name:'José Fajardo',team:'Panama',flag:'🇵🇦',pos:'FW',cat:'hero'},
+  {id:356,name:'Ismael Díaz',team:'Panama',flag:'🇵🇦',pos:'FW',cat:'hero'},
+  {id:357,name:'José Luiz Rodríguez',team:'Panama',flag:'🇵🇦',pos:'FW',cat:'hero'},
+  {id:358,name:'Gustavo Gómez',team:'Paraguay',flag:'🇵🇾',pos:'DF',cat:'fan-fav'},
+  {id:359,name:'Paraguay Crest',team:'Paraguay',flag:'🇵🇾',pos:null,cat:'crest'},
+  {id:360,name:'Miguel Almirón',team:'Paraguay',flag:'🇵🇾',pos:'MF',cat:'icon'},
+  {id:361,name:'Roberto Fernández',team:'Paraguay',flag:'🇵🇾',pos:'GK',cat:'hero'},
+  {id:362,name:'Juan José Cáceres',team:'Paraguay',flag:'🇵🇾',pos:'DF',cat:'hero'},
+  {id:363,name:'Óscar Alderete',team:'Paraguay',flag:'🇵🇾',pos:'DF',cat:'hero'},
+  {id:364,name:'Junior Alonso',team:'Paraguay',flag:'🇵🇾',pos:'DF',cat:'hero'},
+  {id:365,name:'Andrés Cubas',team:'Paraguay',flag:'🇵🇾',pos:'MF',cat:'hero'},
+  {id:366,name:'Mathías Villasanti',team:'Paraguay',flag:'🇵🇾',pos:'MF',cat:'hero'},
+  {id:367,name:'Julio Enciso',team:'Paraguay',flag:'🇵🇾',pos:'MF',cat:'hero'},
+  {id:368,name:'Ramón Sosa',team:'Paraguay',flag:'🇵🇾',pos:'FW',cat:'hero'},
+  {id:369,name:'Antonio Sanabria',team:'Paraguay',flag:'🇵🇾',pos:'FW',cat:'hero'},
+  {id:370,name:'Vitinha',team:'Portugal',flag:'🇵🇹',pos:'MF',cat:'fan-fav'},
+  {id:371,name:'Portugal Crest',team:'Portugal',flag:'🇵🇹',pos:null,cat:'crest'},
+  {id:372,name:'Cristiano Ronaldo',team:'Portugal',flag:'🇵🇹',pos:'FW',cat:'icon'},
+  {id:373,name:'Diogo Costa',team:'Portugal',flag:'🇵🇹',pos:'GK',cat:'hero'},
+  {id:374,name:'Rúben Dias',team:'Portugal',flag:'🇵🇹',pos:'DF',cat:'hero'},
+  {id:375,name:'Nuno Mendes',team:'Portugal',flag:'🇵🇹',pos:'DF',cat:'hero'},
+  {id:376,name:'Bernardo Silva',team:'Portugal',flag:'🇵🇹',pos:'MF',cat:'hero'},
+  {id:377,name:'Bruno Fernandes',team:'Portugal',flag:'🇵🇹',pos:'MF',cat:'hero'},
+  {id:378,name:'Rúben Neves',team:'Portugal',flag:'🇵🇹',pos:'MF',cat:'hero'},
+  {id:379,name:'Francisco Conceição',team:'Portugal',flag:'🇵🇹',pos:'FW',cat:'hero'},
+  {id:380,name:'Pedro Neto',team:'Portugal',flag:'🇵🇹',pos:'FW',cat:'hero'},
+  {id:381,name:'Rafael Leão',team:'Portugal',flag:'🇵🇹',pos:'FW',cat:'hero'},
+  {id:382,name:'Almoez Ali',team:'Qatar',flag:'🇶🇦',pos:'FW',cat:'fan-fav'},
+  {id:383,name:'Qatar Crest',team:'Qatar',flag:'🇶🇦',pos:null,cat:'crest'},
+  {id:384,name:'Hassan Al-Haydos',team:'Qatar',flag:'🇶🇦',pos:'MF',cat:'icon'},
+  {id:385,name:'Meshaal Barsham',team:'Qatar',flag:'🇶🇦',pos:'GK',cat:'hero'},
+  {id:386,name:'Boualem Khoukhi',team:'Qatar',flag:'🇶🇦',pos:'DF',cat:'hero'},
+  {id:387,name:'Lucas Mendes',team:'Qatar',flag:'🇶🇦',pos:'DF',cat:'hero'},
+  {id:388,name:'Pedro Miguel',team:'Qatar',flag:'🇶🇦',pos:'DF',cat:'hero'},
+  {id:389,name:'Homam Al-Amin',team:'Qatar',flag:'🇶🇦',pos:'MF',cat:'hero'},
+  {id:390,name:'Ahmed Fathi',team:'Qatar',flag:'🇶🇦',pos:'MF',cat:'hero'},
+  {id:391,name:'Edmilson Junior',team:'Qatar',flag:'🇶🇦',pos:'MF',cat:'hero'},
+  {id:392,name:'Ahmed Al-Ganehi',team:'Qatar',flag:'🇶🇦',pos:'FW',cat:'hero'},
+  {id:393,name:'Akram Hassan Afif',team:'Qatar',flag:'🇶🇦',pos:'FW',cat:'hero'},
+  {id:394,name:'Feras Al-Brikan',team:'Saudi Arabia',flag:'🇸🇦',pos:'FW',cat:'fan-fav'},
+  {id:395,name:'Saudi Arabia Crest',team:'Saudi Arabia',flag:'🇸🇦',pos:null,cat:'crest'},
+  {id:396,name:'Salem Al-Dawsari',team:'Saudi Arabia',flag:'🇸🇦',pos:'FW',cat:'icon'},
+  {id:397,name:'Nawaf Al-Aqidi',team:'Saudi Arabia',flag:'🇸🇦',pos:'GK',cat:'hero'},
+  {id:398,name:'Hassan Al-Tambakti',team:'Saudi Arabia',flag:'🇸🇦',pos:'DF',cat:'hero'},
+  {id:399,name:'Jehad Thikri',team:'Saudi Arabia',flag:'🇸🇦',pos:'DF',cat:'hero'},
+  {id:400,name:'Saud Abdulhamid',team:'Saudi Arabia',flag:'🇸🇦',pos:'DF',cat:'hero'},
+  {id:401,name:'Nasser Al-Dawsari',team:'Saudi Arabia',flag:'🇸🇦',pos:'MF',cat:'hero'},
+  {id:402,name:'Abdullah Al-Khaibari',team:'Saudi Arabia',flag:'🇸🇦',pos:'MF',cat:'hero'},
+  {id:403,name:'Musab Al-Juwayir',team:'Saudi Arabia',flag:'🇸🇦',pos:'MF',cat:'hero'},
+  {id:404,name:'Saleh Abu Al-Shamat',team:'Saudi Arabia',flag:'🇸🇦',pos:'FW',cat:'hero'},
+  {id:405,name:'Saleh Al-Shehri',team:'Saudi Arabia',flag:'🇸🇦',pos:'FW',cat:'hero'},
+  {id:406,name:'Scott McTominay',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:'MF',cat:'fan-fav'},
+  {id:407,name:'Scotland Crest',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:null,cat:'crest'},
+  {id:408,name:'Andrew Robertson',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:'DF',cat:'icon'},
+  {id:409,name:'Angus Gunn',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:'GK',cat:'hero'},
+  {id:410,name:'Kieran Tierney',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:'DF',cat:'hero'},
+  {id:411,name:'Grant Hanley',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:'DF',cat:'hero'},
+  {id:412,name:'Billy Gilmour',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:'MF',cat:'hero'},
+  {id:413,name:'Lewis Ferguson',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:'MF',cat:'hero'},
+  {id:414,name:'Ryan Christie',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:'MF',cat:'hero'},
+  {id:415,name:'John McGinn',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:'MF',cat:'hero'},
+  {id:416,name:'Ben Doak',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:'FW',cat:'hero'},
+  {id:417,name:'Che Adams',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:'FW',cat:'hero'},
+  {id:418,name:'Kalidou Koulibaly',team:'Senegal',flag:'🇸🇳',pos:'DF',cat:'fan-fav'},
+  {id:419,name:'Senegal Crest',team:'Senegal',flag:'🇸🇳',pos:null,cat:'crest'},
+  {id:420,name:'Sadio Mané',team:'Senegal',flag:'🇸🇳',pos:'FW',cat:'icon'},
+  {id:421,name:'Édouard Mendy',team:'Senegal',flag:'🇸🇳',pos:'GK',cat:'hero'},
+  {id:422,name:'Moussa Niakhaté',team:'Senegal',flag:'🇸🇳',pos:'DF',cat:'hero'},
+  {id:423,name:'El Hadji Malick Diouf',team:'Senegal',flag:'🇸🇳',pos:'DF',cat:'hero'},
+  {id:424,name:'Idrissa Gana Gueye',team:'Senegal',flag:'🇸🇳',pos:'MF',cat:'hero'},
+  {id:425,name:'Pape Matar Sarr',team:'Senegal',flag:'🇸🇳',pos:'MF',cat:'hero'},
+  {id:426,name:'Iliman Ndiaye',team:'Senegal',flag:'🇸🇳',pos:'FW',cat:'hero'},
+  {id:427,name:'Krepin Diatta',team:'Senegal',flag:'🇸🇳',pos:'FW',cat:'hero'},
+  {id:428,name:'Ismaïla Sarr',team:'Senegal',flag:'🇸🇳',pos:'FW',cat:'hero'},
+  {id:429,name:'Nicolas Jackson',team:'Senegal',flag:'🇸🇳',pos:'FW',cat:'hero'},
+  {id:430,name:'Lyle Foster',team:'South Africa',flag:'🇿🇦',pos:'FW',cat:'fan-fav'},
+  {id:431,name:'South Africa Crest',team:'South Africa',flag:'🇿🇦',pos:null,cat:'crest'},
+  {id:432,name:'Ronwen Williams',team:'South Africa',flag:'🇿🇦',pos:'GK',cat:'icon'},
+  {id:433,name:'Siyabonga Ngezana',team:'South Africa',flag:'🇿🇦',pos:'DF',cat:'hero'},
+  {id:434,name:'Aubrey Modiba',team:'South Africa',flag:'🇿🇦',pos:'DF',cat:'hero'},
+  {id:435,name:'Mbekezeli Mbokazi',team:'South Africa',flag:'🇿🇦',pos:'DF',cat:'hero'},
+  {id:436,name:'Khuliso Mudau',team:'South Africa',flag:'🇿🇦',pos:'DF',cat:'hero'},
+  {id:437,name:'Teboho Mokoena',team:'South Africa',flag:'🇿🇦',pos:'MF',cat:'hero'},
+  {id:438,name:'Yaya Sithole',team:'South Africa',flag:'🇿🇦',pos:'MF',cat:'hero'},
+  {id:439,name:'Themba Zwane',team:'South Africa',flag:'🇿🇦',pos:'FW',cat:'hero'},
+  {id:440,name:'Oswin Appollis',team:'South Africa',flag:'🇿🇦',pos:'FW',cat:'hero'},
+  {id:441,name:'Thembinkosi Lorch',team:'South Africa',flag:'🇿🇦',pos:'FW',cat:'hero'},
+  {id:442,name:'Lamine Yamal',team:'Spain',flag:'🇪🇸',pos:'FW',cat:'fan-fav'},
+  {id:443,name:'Spain Crest',team:'Spain',flag:'🇪🇸',pos:null,cat:'crest'},
+  {id:444,name:'Rodri',team:'Spain',flag:'🇪🇸',pos:'MF',cat:'icon'},
+  {id:445,name:'Unai Simón',team:'Spain',flag:'🇪🇸',pos:'GK',cat:'hero'},
+  {id:446,name:'Robin Le Normand',team:'Spain',flag:'🇪🇸',pos:'DF',cat:'hero'},
+  {id:447,name:'Dean Huijsen',team:'Spain',flag:'🇪🇸',pos:'DF',cat:'hero'},
+  {id:448,name:'Marc Cucurella',team:'Spain',flag:'🇪🇸',pos:'DF',cat:'hero'},
+  {id:449,name:'Martín Zubimendi',team:'Spain',flag:'🇪🇸',pos:'MF',cat:'hero'},
+  {id:450,name:'Pedri',team:'Spain',flag:'🇪🇸',pos:'MF',cat:'hero'},
+  {id:451,name:'Fabián Ruiz',team:'Spain',flag:'🇪🇸',pos:'MF',cat:'hero'},
+  {id:452,name:'Nico Williams',team:'Spain',flag:'🇪🇸',pos:'FW',cat:'hero'},
+  {id:453,name:'Mikel Oyarzabal',team:'Spain',flag:'🇪🇸',pos:'FW',cat:'hero'},
+  {id:454,name:'Manuel Akanji',team:'Switzerland',flag:'🇨🇭',pos:'DF',cat:'fan-fav'},
+  {id:455,name:'Switzerland Crest',team:'Switzerland',flag:'🇨🇭',pos:null,cat:'crest'},
+  {id:456,name:'Granit Xhaka',team:'Switzerland',flag:'🇨🇭',pos:'MF',cat:'icon'},
+  {id:457,name:'Gregor Kobel',team:'Switzerland',flag:'🇨🇭',pos:'GK',cat:'hero'},
+  {id:458,name:'Nico Elvedi',team:'Switzerland',flag:'🇨🇭',pos:'DF',cat:'hero'},
+  {id:459,name:'Ricardo Rodríguez',team:'Switzerland',flag:'🇨🇭',pos:'DF',cat:'hero'},
+  {id:460,name:'Silvan Widmer',team:'Switzerland',flag:'🇨🇭',pos:'DF',cat:'hero'},
+  {id:461,name:'Denis Zakaria',team:'Switzerland',flag:'🇨🇭',pos:'MF',cat:'hero'},
+  {id:462,name:'Remo Freuler',team:'Switzerland',flag:'🇨🇭',pos:'MF',cat:'hero'},
+  {id:463,name:'Breel Embolo',team:'Switzerland',flag:'🇨🇭',pos:'FW',cat:'hero'},
+  {id:464,name:'Ruben Vargas',team:'Switzerland',flag:'🇨🇭',pos:'FW',cat:'hero'},
+  {id:465,name:'Dan Ndoye',team:'Switzerland',flag:'🇨🇭',pos:'FW',cat:'hero'},
+  {id:466,name:'Ferjani Sassi',team:'Tunisia',flag:'🇹🇳',pos:'MF',cat:'fan-fav'},
+  {id:467,name:'Tunisia Crest',team:'Tunisia',flag:'🇹🇳',pos:null,cat:'crest'},
+  {id:468,name:'Ellyes Skhiri',team:'Tunisia',flag:'🇹🇳',pos:'MF',cat:'icon'},
+  {id:469,name:'Aymen Dahmen',team:'Tunisia',flag:'🇹🇳',pos:'GK',cat:'hero'},
+  {id:470,name:'Montassar Talbi',team:'Tunisia',flag:'🇹🇳',pos:'DF',cat:'hero'},
+  {id:471,name:'Yassine Meriah',team:'Tunisia',flag:'🇹🇳',pos:'DF',cat:'hero'},
+  {id:472,name:'Ali Abdi',team:'Tunisia',flag:'🇹🇳',pos:'DF',cat:'hero'},
+  {id:473,name:'Aïssa Laïdouni',team:'Tunisia',flag:'🇹🇳',pos:'MF',cat:'hero'},
+  {id:474,name:'Hannibal Mejbri',team:'Tunisia',flag:'🇹🇳',pos:'MF',cat:'hero'},
+  {id:475,name:'Naïm Sliti',team:'Tunisia',flag:'🇹🇳',pos:'FW',cat:'hero'},
+  {id:476,name:'Elias Achouri',team:'Tunisia',flag:'🇹🇳',pos:'FW',cat:'hero'},
+  {id:477,name:'Hazem Mastouri',team:'Tunisia',flag:'🇹🇳',pos:'FW',cat:'hero'},
+  {id:478,name:'Weston McKennie',team:'USA',flag:'🇺🇸',pos:'MF',cat:'fan-fav'},
+  {id:479,name:'USA Crest',team:'USA',flag:'🇺🇸',pos:null,cat:'crest'},
+  {id:480,name:'Christian Pulisic',team:'USA',flag:'🇺🇸',pos:'FW',cat:'icon'},
+  {id:481,name:'Matt Freese',team:'USA',flag:'🇺🇸',pos:'GK',cat:'hero'},
+  {id:482,name:'Chris Richards',team:'USA',flag:'🇺🇸',pos:'DF',cat:'hero'},
+  {id:483,name:'Tim Ream',team:'USA',flag:'🇺🇸',pos:'DF',cat:'hero'},
+  {id:484,name:'Antonee Robinson',team:'USA',flag:'🇺🇸',pos:'DF',cat:'hero'},
+  {id:485,name:'Tanner Tessmann',team:'USA',flag:'🇺🇸',pos:'MF',cat:'hero'},
+  {id:486,name:'Tyler Adams',team:'USA',flag:'🇺🇸',pos:'MF',cat:'hero'},
+  {id:487,name:'Timothy Weah',team:'USA',flag:'🇺🇸',pos:'FW',cat:'hero'},
+  {id:488,name:'Malik Tillman',team:'USA',flag:'🇺🇸',pos:'FW',cat:'hero'},
+  {id:489,name:'Folarin Balogun',team:'USA',flag:'🇺🇸',pos:'FW',cat:'hero'},
+  {id:490,name:'José María Giménez',team:'Uruguay',flag:'🇺🇾',pos:'DF',cat:'fan-fav'},
+  {id:491,name:'Uruguay Crest',team:'Uruguay',flag:'🇺🇾',pos:null,cat:'crest'},
+  {id:492,name:'Federico Valverde',team:'Uruguay',flag:'🇺🇾',pos:'MF',cat:'icon'},
+  {id:493,name:'Sergio Rochet',team:'Uruguay',flag:'🇺🇾',pos:'GK',cat:'hero'},
+  {id:494,name:'Ronald Araújo',team:'Uruguay',flag:'🇺🇾',pos:'DF',cat:'hero'},
+  {id:495,name:'Sebastián Cáceres',team:'Uruguay',flag:'🇺🇾',pos:'DF',cat:'hero'},
+  {id:496,name:'Mathías Olivera',team:'Uruguay',flag:'🇺🇾',pos:'DF',cat:'hero'},
+  {id:497,name:'Nahitán Nández',team:'Uruguay',flag:'🇺🇾',pos:'MF',cat:'hero'},
+  {id:498,name:'Rodrigo Bentancur',team:'Uruguay',flag:'🇺🇾',pos:'MF',cat:'hero'},
+  {id:499,name:'Manuel Ugarte',team:'Uruguay',flag:'🇺🇾',pos:'MF',cat:'hero'},
+  {id:500,name:'Facundo Pellistri',team:'Uruguay',flag:'🇺🇾',pos:'FW',cat:'hero'},
+  {id:501,name:'Darwin Núñez',team:'Uruguay',flag:'🇺🇾',pos:'FW',cat:'hero'},
+  {id:502,name:'Abdukodir Khusanov',team:'Uzbekistan',flag:'🇺🇿',pos:'DF',cat:'fan-fav'},
+  {id:503,name:'Uzbekistan Crest',team:'Uzbekistan',flag:'🇺🇿',pos:null,cat:'crest'},
+  {id:504,name:'Eldor Shomurodov',team:'Uzbekistan',flag:'🇺🇿',pos:'FW',cat:'icon'},
+  {id:505,name:'Utkin Yusupov',team:'Uzbekistan',flag:'🇺🇿',pos:'GK',cat:'hero'},
+  {id:506,name:'Farrukh Sayfiev',team:'Uzbekistan',flag:'🇺🇿',pos:'DF',cat:'hero'},
+  {id:507,name:'Sherzod Nasrullaev',team:'Uzbekistan',flag:'🇺🇿',pos:'DF',cat:'hero'},
+  {id:508,name:'Husniddin Aliqulov',team:'Uzbekistan',flag:'🇺🇿',pos:'MF',cat:'hero'},
+  {id:509,name:'Rustam Ashurmatov',team:'Uzbekistan',flag:'🇺🇿',pos:'DF',cat:'hero'},
+  {id:510,name:'Khurshid Alijonov',team:'Uzbekistan',flag:'🇺🇿',pos:'MF',cat:'hero'},
+  {id:511,name:'Odiljon Hamrobekov',team:'Uzbekistan',flag:'🇺🇿',pos:'MF',cat:'hero'},
+  {id:512,name:'Otabek Shukurov',team:'Uzbekistan',flag:'🇺🇿',pos:'MF',cat:'hero'},
+  {id:513,name:'Abbosbek Fayzullaev',team:'Uzbekistan',flag:'🇺🇿',pos:'FW',cat:'hero'},
+  {id:514,name:'ITA · NIR/WAL · BIH',team:'Contender',flag:'🌐',pos:null,cat:'contender'},
+  {id:515,name:'UKR · SWE/POL · ALB',team:'Contender',flag:'🌐',pos:null,cat:'contender'},
+  {id:516,name:'TUR · ROU/SVK · KOS',team:'Contender',flag:'🌐',pos:null,cat:'contender'},
+  {id:517,name:'DEN · MKD/CZE · IRL',team:'Contender',flag:'🌐',pos:null,cat:'contender'},
+  {id:518,name:'NCL · JAM/COD',team:'Contender',flag:'🌐',pos:null,cat:'contender'},
+  {id:519,name:'SUR · BOL/IRO',team:'Contender',flag:'🌐',pos:null,cat:'contender'},
+  {id:520,name:'Christian Eriksen',team:'Denmark',flag:'🇩🇰',pos:'MF',cat:'contender'},
+  {id:521,name:'Pierre-Emile Højbjerg',team:'Denmark',flag:'🇩🇰',pos:'MF',cat:'contender'},
+  {id:522,name:'Thomas Delaney',team:'Denmark',flag:'🇩🇰',pos:'MF',cat:'contender'},
+  {id:523,name:'Mikkel Damsgaard',team:'Denmark',flag:'🇩🇰',pos:'MF',cat:'contender'},
+  {id:524,name:'Rasmus Højlund',team:'Denmark',flag:'🇩🇰',pos:'FW',cat:'contender'},
+  {id:525,name:'Gianluigi Donnarumma',team:'Italy',flag:'🇮🇹',pos:'GK',cat:'contender'},
+  {id:526,name:'Alessandro Bastoni',team:'Italy',flag:'🇮🇹',pos:'DF',cat:'contender'},
+  {id:527,name:'Sandro Tonali',team:'Italy',flag:'🇮🇹',pos:'MF',cat:'contender'},
+  {id:528,name:'Nicolò Barella',team:'Italy',flag:'🇮🇹',pos:'MF',cat:'contender'},
+  {id:529,name:'Moise Kean',team:'Italy',flag:'🇮🇹',pos:'FW',cat:'contender'},
+  {id:530,name:'Andre Blake',team:'Jamaica',flag:'🇯🇲',pos:'GK',cat:'contender'},
+  {id:531,name:'Ethan Pinnock',team:'Jamaica',flag:'🇯🇲',pos:'DF',cat:'contender'},
+  {id:532,name:'Demarai Gray',team:'Jamaica',flag:'🇯🇲',pos:'FW',cat:'contender'},
+  {id:533,name:'Leon Bailey',team:'Jamaica',flag:'🇯🇲',pos:'FW',cat:'contender'},
+  {id:534,name:'Bobby Decordova-Reid',team:'Jamaica',flag:'🇯🇲',pos:'FW',cat:'contender'},
+  {id:535,name:'Matty Cash',team:'Poland',flag:'🇵🇱',pos:'DF',cat:'contender'},
+  {id:536,name:'Jakub Kiwior',team:'Poland',flag:'🇵🇱',pos:'DF',cat:'contender'},
+  {id:537,name:'Piotr Zielinski',team:'Poland',flag:'🇵🇱',pos:'MF',cat:'contender'},
+  {id:538,name:'Sebastian Szymanski',team:'Poland',flag:'🇵🇱',pos:'MF',cat:'contender'},
+  {id:539,name:'Robert Lewandowski',team:'Poland',flag:'🇵🇱',pos:'FW',cat:'contender'},
+  {id:540,name:'Isak Hien',team:'Sweden',flag:'🇸🇪',pos:'DF',cat:'contender'},
+  {id:541,name:'Dejan Kulusevski',team:'Sweden',flag:'🇸🇪',pos:'FW',cat:'contender'},
+  {id:542,name:'Anthony Elanga',team:'Sweden',flag:'🇸🇪',pos:'FW',cat:'contender'},
+  {id:543,name:'Viktor Gyökeres',team:'Sweden',flag:'🇸🇪',pos:'FW',cat:'contender'},
+  {id:544,name:'Alexander Isak',team:'Sweden',flag:'🇸🇪',pos:'FW',cat:'contender'},
+  {id:545,name:'Çaglar Söyüncü',team:'Turkey',flag:'🇹🇷',pos:'DF',cat:'contender'},
+  {id:546,name:'Hakan Çalhanoglu',team:'Turkey',flag:'🇹🇷',pos:'MF',cat:'contender'},
+  {id:547,name:'Arda Güler',team:'Turkey',flag:'🇹🇷',pos:'MF',cat:'contender'},
+  {id:548,name:'Kenan Yildiz',team:'Turkey',flag:'🇹🇷',pos:'FW',cat:'contender'},
+  {id:549,name:'Kerem Aktürkoglu',team:'Turkey',flag:'🇹🇷',pos:'FW',cat:'contender'},
+  {id:550,name:'Emiliano Martínez',team:'Argentina',flag:'🇦🇷',pos:'GK',cat:'top-keeper'},
+  {id:551,name:'Thibaut Courtois',team:'Belgium',flag:'🇧🇪',pos:'GK',cat:'top-keeper'},
+  {id:552,name:'Alisson',team:'Brazil',flag:'🇧🇷',pos:'GK',cat:'top-keeper'},
+  {id:553,name:'Mike Maignan',team:'France',flag:'🇫🇷',pos:'GK',cat:'top-keeper'},
+  {id:554,name:'Zion Suzuki',team:'Japan',flag:'🇯🇵',pos:'GK',cat:'top-keeper'},
+  {id:555,name:'Yassine Bounou',team:'Morocco',flag:'🇲🇦',pos:'GK',cat:'top-keeper'},
+  {id:556,name:'Diogo Costa',team:'Portugal',flag:'🇵🇹',pos:'GK',cat:'top-keeper'},
+  {id:557,name:'Unai Simón',team:'Spain',flag:'🇪🇸',pos:'GK',cat:'top-keeper'},
+  {id:558,name:'Gregor Kobel',team:'Switzerland',flag:'🇨🇭',pos:'GK',cat:'top-keeper'},
+  {id:559,name:'Éder Militão',team:'Brazil',flag:'🇧🇷',pos:'DF',cat:'def-rock'},
+  {id:560,name:'Alphonso Davies',team:'Canada',flag:'🇨🇦',pos:'DF',cat:'def-rock'},
+  {id:561,name:'William Saliba',team:'France',flag:'🇫🇷',pos:'DF',cat:'def-rock'},
+  {id:562,name:'Antonio Rüdiger',team:'Germany',flag:'🇩🇪',pos:'DF',cat:'def-rock'},
+  {id:563,name:'Min-jae Kim',team:'Korea Republic',flag:'🇰🇷',pos:'DF',cat:'def-rock'},
+  {id:564,name:'Achraf Hakimi',team:'Morocco',flag:'🇲🇦',pos:'DF',cat:'def-rock'},
+  {id:565,name:'Virgil van Dijk',team:'Netherlands',flag:'🇳🇱',pos:'DF',cat:'def-rock'},
+  {id:566,name:'Nuno Mendes',team:'Portugal',flag:'🇵🇹',pos:'DF',cat:'def-rock'},
+  {id:567,name:'Dean Huijsen',team:'Spain',flag:'🇪🇸',pos:'DF',cat:'def-rock'},
+  {id:568,name:'Enzo Fernández',team:'Argentina',flag:'🇦🇷',pos:'MF',cat:'midfield'},
+  {id:569,name:'Kevin De Bruyne',team:'Belgium',flag:'🇧🇪',pos:'MF',cat:'midfield'},
+  {id:570,name:'Casemiro',team:'Brazil',flag:'🇧🇷',pos:'MF',cat:'midfield'},
+  {id:571,name:'Luka Modrić',team:'Croatia',flag:'🇭🇷',pos:'MF',cat:'midfield'},
+  {id:572,name:'Moisés Caicedo',team:'Ecuador',flag:'🇪🇨',pos:'MF',cat:'midfield'},
+  {id:573,name:'Jude Bellingham',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'MF',cat:'midfield'},
+  {id:574,name:'Aurélien Tchouaméni',team:'France',flag:'🇫🇷',pos:'MF',cat:'midfield'},
+  {id:575,name:'Florian Wirtz',team:'Germany',flag:'🇩🇪',pos:'MF',cat:'midfield'},
+  {id:576,name:'Sofyan Amrabat',team:'Morocco',flag:'🇲🇦',pos:'MF',cat:'midfield'},
+  {id:577,name:'Tijjani Reijnders',team:'Netherlands',flag:'🇳🇱',pos:'MF',cat:'midfield'},
+  {id:578,name:'Martin Ødegaard',team:'Norway',flag:'🇳🇴',pos:'MF',cat:'midfield'},
+  {id:579,name:'Vitinha',team:'Portugal',flag:'🇵🇹',pos:'MF',cat:'midfield'},
+  {id:580,name:'Scott McTominay',team:'Scotland',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',pos:'MF',cat:'midfield'},
+  {id:581,name:'Rodri',team:'Spain',flag:'🇪🇸',pos:'MF',cat:'midfield'},
+  {id:582,name:'Pedri',team:'Spain',flag:'🇪🇸',pos:'MF',cat:'midfield'},
+  {id:583,name:'Granit Xhaka',team:'Switzerland',flag:'🇨🇭',pos:'MF',cat:'midfield'},
+  {id:584,name:'Tyler Adams',team:'USA',flag:'🇺🇸',pos:'MF',cat:'midfield'},
+  {id:585,name:'Federico Valverde',team:'Uruguay',flag:'🇺🇾',pos:'MF',cat:'midfield'},
+  {id:586,name:'Julián Álvarez',team:'Argentina',flag:'🇦🇷',pos:'FW',cat:'goal-mach'},
+  {id:587,name:'Romelu Lukaku',team:'Belgium',flag:'🇧🇪',pos:'FW',cat:'goal-mach'},
+  {id:588,name:'Raphinha',team:'Brazil',flag:'🇧🇷',pos:'FW',cat:'goal-mach'},
+  {id:589,name:'Jonathan David',team:'Canada',flag:'🇨🇦',pos:'FW',cat:'goal-mach'},
+  {id:590,name:'Luis Díaz',team:'Colombia',flag:'🇨🇴',pos:'FW',cat:'goal-mach'},
+  {id:591,name:'Andrej Kramarić',team:'Croatia',flag:'🇭🇷',pos:'FW',cat:'goal-mach'},
+  {id:592,name:'Enner Valencia',team:'Ecuador',flag:'🇪🇨',pos:'FW',cat:'goal-mach'},
+  {id:593,name:'Omar Marmoush',team:'Egypt',flag:'🇪🇬',pos:'FW',cat:'goal-mach'},
+  {id:594,name:'Marcus Rashford',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'FW',cat:'goal-mach'},
+  {id:595,name:'Randal Kolo Muani',team:'France',flag:'🇫🇷',pos:'FW',cat:'goal-mach'},
+  {id:596,name:'Kai Havertz',team:'Germany',flag:'🇩🇪',pos:'FW',cat:'goal-mach'},
+  {id:597,name:'Sébastien Haller',team:'Ivory Coast',flag:'🇨🇮',pos:'FW',cat:'goal-mach'},
+  {id:598,name:'Raúl Jiménez',team:'Mexico',flag:'🇲🇽',pos:'FW',cat:'goal-mach'},
+  {id:599,name:'Youssef En-Nesyri',team:'Morocco',flag:'🇲🇦',pos:'FW',cat:'goal-mach'},
+  {id:600,name:'Cody Gakpo',team:'Netherlands',flag:'🇳🇱',pos:'FW',cat:'goal-mach'},
+  {id:601,name:'Chris Wood',team:'New Zealand',flag:'🇳🇿',pos:'FW',cat:'goal-mach'},
+  {id:602,name:'Alexander Sørloth',team:'Norway',flag:'🇳🇴',pos:'FW',cat:'goal-mach'},
+  {id:603,name:'Nicolas Jackson',team:'Senegal',flag:'🇸🇳',pos:'FW',cat:'goal-mach'},
+  {id:604,name:'Mikel Oyarzabal',team:'Spain',flag:'🇪🇸',pos:'FW',cat:'goal-mach'},
+  {id:605,name:'Breel Embolo',team:'Switzerland',flag:'🇨🇭',pos:'FW',cat:'goal-mach'},
+  {id:606,name:'Christian Pulisic',team:'USA',flag:'🇺🇸',pos:'FW',cat:'goal-mach'},
+  {id:607,name:'Darwin Núñez',team:'Uruguay',flag:'🇺🇾',pos:'FW',cat:'goal-mach'},
+  {id:608,name:'Claudio Echeverri',team:'Argentina',flag:'🇦🇷',pos:'MF',cat:'rookie'},
+  {id:609,name:'Franco Mastantuono',team:'Argentina',flag:'🇦🇷',pos:'MF',cat:'rookie'},
+  {id:610,name:'Zeno Debast',team:'Belgium',flag:'🇧🇪',pos:'DF',cat:'rookie'},
+  {id:611,name:'Wesley',team:'Brazil',flag:'🇧🇷',pos:'FW',cat:'rookie'},
+  {id:612,name:'Estêvão Willian',team:'Brazil',flag:'🇧🇷',pos:'FW',cat:'rookie'},
+  {id:613,name:'Luka Sučić',team:'Croatia',flag:'🇭🇷',pos:'MF',cat:'rookie'},
+  {id:614,name:'Kendry Páez',team:'Ecuador',flag:'🇪🇨',pos:'MF',cat:'rookie'},
+  {id:615,name:'Morgan Rogers',team:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'MF',cat:'rookie'},
+  {id:616,name:'Désiré Doué',team:'France',flag:'🇫🇷',pos:'FW',cat:'rookie'},
+  {id:617,name:'Bradley Barcola',team:'France',flag:'🇫🇷',pos:'FW',cat:'rookie'},
+  {id:618,name:'Nick Woltemade',team:'Germany',flag:'🇩🇪',pos:'FW',cat:'rookie'},
+  {id:619,name:'Xavi Simons',team:'Netherlands',flag:'🇳🇱',pos:'MF',cat:'rookie'},
+  {id:620,name:'Gustav Isaksen',team:'Norway',flag:'🇳🇴',pos:'FW',cat:'rookie'},
+  {id:621,name:'Diego Gómez',team:'Paraguay',flag:'🇵🇾',pos:'MF',cat:'rookie'},
+  {id:622,name:'João Neves',team:'Portugal',flag:'🇵🇹',pos:'MF',cat:'rookie'},
+  {id:623,name:'Pau Cubarsí',team:'Spain',flag:'🇪🇸',pos:'DF',cat:'rookie'},
+  {id:624,name:'Bilal El Khannouss',team:'Morocco',flag:'🇲🇦',pos:'MF',cat:'rookie'},
+  {id:625,name:'Maple',team:'WC 2026',flag:'🏆',pos:null,cat:'mascot'},
+  {id:626,name:'Clutch',team:'WC 2026',flag:'🏆',pos:null,cat:'mascot'},
+  {id:627,name:'Zayu',team:'WC 2026',flag:'🏆',pos:null,cat:'mascot'},
+  {id:628,name:'Eternos 22 – Defenders',team:'WC 2026',flag:'🏆',pos:null,cat:'eternos'},
+  {id:629,name:'Eternos 22 – Midfielders',team:'WC 2026',flag:'🏆',pos:null,cat:'eternos'},
+  {id:630,name:'Eternos 22 – Forwards',team:'WC 2026',flag:'🏆',pos:null,cat:'eternos'},
 ];
 
-// Special category players
-const SPECIAL_CARDS = {
-  mascot:    [['Maple','WC 2026'],['Clutch','WC 2026'],['Zayu','WC 2026']],
-  contender: [
-    ['Team A1','Contender'],['Team A2','Contender'],['Team B1','Contender'],['Team B2','Contender'],
-    ['Team C1','Contender'],['Team C2','Contender'],['Team D1','Contender'],['Team D2','Contender'],
-    ['Team E1','Contender'],['Team E2','Contender'],['Team F1','Contender'],['Team F2','Contender'],
-    ['Team G1','Contender'],['Team G2','Contender'],['Team H1','Contender'],['Team H2','Contender'],
-    ['Team I1','Contender'],['Team I2','Contender'],['Team J1','Contender'],['Team J2','Contender'],
-    ['Team K1','Contender'],['Team K2','Contender'],['Team L1','Contender'],['Team L2','Contender'],
-    ['Team M1','Contender'],['Team M2','Contender'],['Team N1','Contender'],['Team N2','Contender'],
-    ['Team O1','Contender'],['Team O2','Contender'],['Team P1','Contender'],['Team P2','Contender'],
-    ['Team Q1','Contender'],['Team Q2','Contender'],['Team R1','Contender'],['Team R2','Contender'],
-  ],
-  'def-rock':  [['Virgil van Dijk','Netherlands'],['Rúben Dias','Portugal'],['Antonio Rüdiger','Germany'],['Marquinhos','Brazil'],['Nicolás Otamendi','Argentina'],['Kalidou Koulibaly','Senegal'],['Cristian Romero','Argentina'],['Kim Min-jae','Korea Republic'],['Éder Militão','Brazil'],['Raphaël Varane','France'],['Harry Maguire','England'],['Achraf Hakimi','Morocco'],['Joško Gvardiol','Croatia'],['William Saliba','England'],['Romain Saïss','Morocco'],['Gustavo Gómez','Paraguay'],['Aissa Mandi','Algeria'],['Ramy Bensebaini','Algeria']],
-  'fan-fav':   [['Erling Haaland','Norway'],['Kylian Mbappé','France'],['Lionel Messi','Argentina'],['Cristiano Ronaldo','Portugal'],['Neymar Jr','Brazil'],['Mohammed Salah','Egypt'],['Son Heung-min','Korea Republic'],['Sadio Mané','Senegal'],['Romelu Lukaku','Belgium'],['Harry Kane','England'],['Robert Lewandowski','Poland'],['Lamine Yamal','Spain'],['Vinicius Jr','Brazil'],['Jude Bellingham','England'],['Kevin De Bruyne','Belgium'],['Martin Ødegaard','Norway'],['Pedri','Spain'],['Takefusa Kubo','Japan']],
-  'goal-mach': [['Erling Haaland','Norway'],['Kylian Mbappé','France'],['Lautaro Martínez','Argentina'],['Harry Kane','England'],['Romelu Lukaku','Belgium'],['Darwin Núñez','Uruguay'],['Santiago Giménez','Mexico'],['Cody Gakpo','Netherlands'],['Gonçalo Ramos','Portugal'],['Jonathan David','Canada'],['Richarlison','Brazil'],['Álvaro Morata','Spain'],['Mehdi Taremi','IR Iran'],['Aymen Hussein','Iraq'],['Youssef En-Nesyri','Morocco'],['Lassi Isak','Sweden'],['Sébastien Haller',"Côte d'Ivoire"],['Duván Zapata','Colombia']],
-  'icon':      [['Lionel Messi','Argentina'],['Cristiano Ronaldo','Portugal'],['Luka Modrić','Croatia'],['Luis Suárez','Uruguay'],['Thomas Müller','Germany'],['Antoine Griezmann','France'],['Thiago Silva','Brazil'],['Keylor Navas','Costa Rica'],['Neymar Jr','Brazil'],['Paul Pogba','France'],['Gareth Bale','Wales'],['Xherdan Shaqiri','Switzerland'],['Kevin De Bruyne','Belgium'],['Manuel Neuer','Germany'],['Thibaut Courtois','Belgium'],['Diego Godín','Uruguay'],['Dani Carvajal','Spain'],['Iker Casillas','Spain']],
-  'rookies':   [['Lamine Yamal','Spain'],['Warren Zaïre-Emery','France'],['Arda Güler','Türkiye'],['Florentino Luís','Portugal'],['Kobbie Mainoo','England'],['Jamal Musiala','Germany'],['Eduardo Camavinga','France'],['Savinho','Brazil'],['Endrick','Brazil'],['Kendry Páez','Ecuador'],['Pedri','Spain'],['Gavi','Spain'],['Bradley Barcola','France'],['Kenan Yıldız','Türkiye'],['Lamine Camara','Senegal'],['Xavi Simons','Netherlands'],['Cole Palmer','England'],['Folarin Balogun','USA']],
-  'midfield':  [['Kevin De Bruyne','Belgium'],['Luka Modrić','Croatia'],['Rodri','Spain'],['Alexis Mac Allister','Argentina'],['Frenkie de Jong','Netherlands'],['Joshua Kimmich','Germany'],['Casemiro','Brazil'],['Declan Rice','England'],['Aurélien Tchouaméni','France'],['Sofyan Amrabat','Morocco'],['Jude Bellingham','England'],['Pedri','Spain'],['Wataru Endō','Japan'],['Federico Valverde','Uruguay'],['Granit Xhaka','Switzerland'],['İlkay Gündoğan','Germany'],['Idrissa Gueye','Senegal'],['James Rodríguez','Colombia']],
-  'keeper':    [['Emiliano Martínez','Argentina'],['Thibaut Courtois','Belgium'],['Alisson','Brazil'],['Manuel Neuer','Germany'],['Jordan Pickford','England'],['Mike Maignan','France'],['Yann Sommer','Switzerland'],['Dominik Livaković','Croatia'],['Gianluigi Donnarumma','Italy'],['Édouard Mendy','Senegal'],['Yassine Bounou','Morocco'],['Kim Seung-gyu','Korea Republic'],['Shuichi Gonda','Japan'],['Mohammed Al-Owais','Saudi Arabia'],['Mat Ryan','Australia'],['Bart Verbruggen','Netherlands'],['Ørjan Nyland','Norway'],['Diogo Costa','Portugal']],
-};
-
-// ── Build the 630-card array ──
-function buildCards() {
-  const cards = [];
-  let id = 1;
-
-  // 1. Team sections (crests + players) alphabetically
-  for (const t of TEAMS_DATA) {
-    cards.push({ id: id++, name: t.name + ' Crest', team: t.name, flag: t.flag, category: 'team-crest', rarity: 'rare' });
-    for (const p of t.players) {
-      cards.push({ id: id++, name: p, team: t.name, flag: t.flag, category: 'base', rarity: 'common' });
-    }
-  }
-
-  // 2. Mascots (3)
-  for (const [name, team] of SPECIAL_CARDS.mascot) {
-    cards.push({ id: id++, name, team, flag: '🏆', category: 'mascot', rarity: 'rare' });
-  }
-
-  // 3. Contenders (36)
-  for (const [name, team] of SPECIAL_CARDS.contender) {
-    cards.push({ id: id++, name, team, flag: '🌐', category: 'contender', rarity: 'rare' });
-  }
-
-  // 4. Special categories (18 each = 126)
-  const specialOrder = ['def-rock','fan-fav','goal-mach','icon','rookies','midfield','keeper'];
-  for (const cat of specialOrder) {
-    for (const [name, team] of SPECIAL_CARDS[cat]) {
-      const teamData = TEAMS_DATA.find(t => t.name === team);
-      cards.push({ id: id++, name, team, flag: teamData ? teamData.flag : '🌐', category: cat, rarity: CATEGORIES[cat].rarity });
-    }
-  }
-
-  return cards;
-}
-
-const ALL_CARDS = buildCards();
 const TOTAL = 630;
 
+// 42 national teams (cards 10–513)
+const TEAMS_LIST = [...new Set(ALL_CARDS.filter(c=>c.id>=10&&c.id<=513).map(c=>c.team))].sort();
+function teamFlag(name){return ALL_CARDS.find(c=>c.team===name)?.flag||'🌐';}
+
 // ── State ──
-let owned = new Set(JSON.parse(localStorage.getItem('wc2026_owned') || '[]'));
-let recentAdds = JSON.parse(localStorage.getItem('wc2026_recent') || '[]');
+let owned=new Set(JSON.parse(localStorage.getItem('wc2026_owned')||'[]'));
+let recentAdds=JSON.parse(localStorage.getItem('wc2026_recent')||'[]');
+function saveOwned(){localStorage.setItem('wc2026_owned',JSON.stringify([...owned]));}
+function saveRecent(){localStorage.setItem('wc2026_recent',JSON.stringify(recentAdds));}
 
-function saveOwned() {
-  localStorage.setItem('wc2026_owned', JSON.stringify([...owned]));
-}
-function saveRecent() {
-  localStorage.setItem('wc2026_recent', JSON.stringify(recentAdds));
-}
-
-// ── Collection filter state ──
-let activeFilter = 'all';
-let searchQuery = '';
+// ── Filter state ──
+let activeFilter='all';
+let searchQuery='';
 
 // ── Helpers ──
-function pct(n, d) { return d === 0 ? 0 : Math.round(n / d * 100); }
+function pct(n,d){return d===0?0:Math.round(n/d*100);}
+function catR(c){return(CAT_META[c.cat]||{rarity:'common'}).rarity;}
 
-function getStats() {
-  const byRarity = {};
-  const byCat = {};
-  const byTeam = {};
+function getStats(){
+  const byRarity={},byCat={},byTeam={},byPos={};
+  for(const c of ALL_CARDS){
+    const r=catR(c);
+    if(!byRarity[r])byRarity[r]={total:0,owned:0};
+    byRarity[r].total++;
+    if(owned.has(c.id))byRarity[r].owned++;
 
-  for (const c of ALL_CARDS) {
-    if (!byRarity[c.rarity]) byRarity[c.rarity] = { total: 0, owned: 0 };
-    byRarity[c.rarity].total++;
-    if (owned.has(c.id)) byRarity[c.rarity].owned++;
+    if(!byCat[c.cat])byCat[c.cat]={total:0,owned:0};
+    byCat[c.cat].total++;
+    if(owned.has(c.id))byCat[c.cat].owned++;
 
-    if (!byCat[c.category]) byCat[c.category] = { total: 0, owned: 0 };
-    byCat[c.category].total++;
-    if (owned.has(c.id)) byCat[c.category].owned++;
+    if(!byTeam[c.team])byTeam[c.team]={total:0,owned:0,flag:c.flag};
+    byTeam[c.team].total++;
+    if(owned.has(c.id))byTeam[c.team].owned++;
 
-    const key = c.team;
-    if (!byTeam[key]) byTeam[key] = { total: 0, owned: 0, flag: c.flag };
-    byTeam[key].total++;
-    if (owned.has(c.id)) byTeam[key].owned++;
+    if(c.pos){
+      if(!byPos[c.pos])byPos[c.pos]={total:0,owned:0};
+      byPos[c.pos].total++;
+      if(owned.has(c.id))byPos[c.pos].owned++;
+    }
   }
-
-  return { byRarity, byCat, byTeam };
+  return{byRarity,byCat,byTeam,byPos};
 }
 
-// ── UI Updates ──
-function updateHeader() {
-  const n = owned.size;
-  const p = pct(n, TOTAL);
-  document.getElementById('hdr-owned').textContent = n;
-  document.getElementById('hdr-bar').style.width = p + '%';
+// ── Header ──
+function updateHeader(){
+  const n=owned.size;
+  document.getElementById('hdr-owned').textContent=n;
+  document.getElementById('hdr-bar').style.width=pct(n,TOTAL)+'%';
 }
 
-function renderDashboard() {
-  const n = owned.size;
-  const p = pct(n, TOTAL);
-  const stats = getStats();
+// ── Dashboard ──
+function renderDashboard(){
+  const n=owned.size,p=pct(n,TOTAL);
+  const stats=getStats();
+  document.getElementById('s-owned').textContent=n;
+  document.getElementById('s-missing').textContent=TOTAL-n;
+  document.getElementById('s-owned-pct').textContent=p+'% complete';
+  document.getElementById('sb-owned').style.width=p+'%';
+  document.getElementById('sb-missing').style.width=pct(TOTAL-n,TOTAL)+'%';
 
-  document.getElementById('s-owned').textContent = n;
-  document.getElementById('s-missing').textContent = TOTAL - n;
-  document.getElementById('s-owned-pct').textContent = p + '% complete';
-  document.getElementById('sb-owned').style.width = p + '%';
-  document.getElementById('sb-missing').style.width = pct(TOTAL - n, TOTAL) + '%';
-
-  // Rarity breakdown
-  const rl = document.getElementById('rarity-list');
-  rl.innerHTML = '';
-  for (const [key, r] of Object.entries(RARITIES)) {
-    const rd = stats.byRarity[key] || { total: 0, owned: 0 };
-    const rp = pct(rd.owned, rd.total);
-    rl.innerHTML += `
-      <div class="rarity-row" data-filter="rar:${key}" onclick="openFilter(this.dataset.filter)">
-        <div class="rarity-dot" style="background:${r.color}"></div>
-        <div class="rarity-info">
-          <div class="rarity-name">${r.label}</div>
-          <div class="rarity-nums">${rd.owned} / ${rd.total}</div>
-        </div>
-        <div class="rarity-pct">${rp}%</div>
-      </div>`;
+  // Rarity
+  const rl=document.getElementById('rarity-list');rl.innerHTML='';
+  for(const[key,r]of Object.entries(RARITIES)){
+    const rd=stats.byRarity[key]||{total:0,owned:0};
+    const rp=pct(rd.owned,rd.total);
+    rl.innerHTML+=`<div class="rarity-row" data-filter="rar:${key}" onclick="openFilter(this.dataset.filter)">
+      <div class="rarity-dot" style="background:${r.color}"></div>
+      <div class="rarity-info"><div class="rarity-name">${r.label}</div><div class="rarity-nums">${rd.owned} / ${rd.total}</div></div>
+      <div class="rarity-pct">${rp}%</div></div>`;
   }
 
-  // Category summary (top 6 by total)
-  const csl = document.getElementById('category-summary-list');
-  csl.innerHTML = '';
-  const catEntries = Object.entries(stats.byCat).sort((a,b) => b[1].total - a[1].total).slice(0,6);
-  for (const [catKey, cd] of catEntries) {
-    const cat = CATEGORIES[catKey] || { label: catKey, icon: '📋', color: '#888' };
-    const cp = pct(cd.owned, cd.total);
-    csl.innerHTML += `
-      <div class="rarity-row" data-filter="cat:${catKey}" onclick="openFilter(this.dataset.filter)">
-        <div class="rarity-dot" style="background:${cat.color}"></div>
-        <div class="rarity-info">
-          <div class="rarity-name">${cat.icon} ${cat.label}</div>
-          <div class="rarity-nums">${cd.owned} / ${cd.total}</div>
-        </div>
-        <div class="rarity-pct">${cp}%</div>
-      </div>`;
+  // Category summary (top 6)
+  const csl=document.getElementById('category-summary-list');csl.innerHTML='';
+  const topCats=Object.entries(stats.byCat).sort((a,b)=>b[1].total-a[1].total).slice(0,6);
+  for(const[catKey,cd]of topCats){
+    const cm=CAT_META[catKey]||{label:catKey,icon:'📋',color:'#888'};
+    const cp=pct(cd.owned,cd.total);
+    csl.innerHTML+=`<div class="rarity-row" data-filter="cat:${catKey}" onclick="openFilter(this.dataset.filter)">
+      <div class="rarity-dot" style="background:${cm.color}"></div>
+      <div class="rarity-info"><div class="rarity-name">${cm.icon} ${cm.label}</div><div class="rarity-nums">${cd.owned} / ${cd.total}</div></div>
+      <div class="rarity-pct">${cp}%</div></div>`;
   }
 
-  // Team grid
-  const tg = document.getElementById('team-grid');
-  tg.innerHTML = '';
-  const teamEntries = TEAMS_DATA.map(t => ({
-    name: t.name, flag: t.flag,
-    ...(stats.byTeam[t.name] || { total: 0, owned: 0 })
-  }));
-  for (const t of teamEntries) {
-    const tp = pct(t.owned, t.total);
-    tg.innerHTML += `
-      <div class="team-card" data-filter="team:${t.name}" onclick="openFilter(this.dataset.filter)">
-        <div class="team-card-flag">${t.flag}</div>
-        <div class="team-card-name">${t.name}</div>
-        <div class="team-card-pct">${t.owned}/${t.total} · ${tp}%</div>
-        <div class="team-card-bar"><div class="team-card-fill" style="width:${tp}%"></div></div>
-      </div>`;
+  // Team grid (42 national teams)
+  const tg=document.getElementById('team-grid');tg.innerHTML='';
+  for(const name of TEAMS_LIST){
+    const td=stats.byTeam[name]||{total:0,owned:0};
+    const tp=pct(td.owned,td.total);
+    tg.innerHTML+=`<div class="team-card" data-filter="team:${name}" onclick="openFilter(this.dataset.filter)">
+      <div class="team-card-flag">${teamFlag(name)}</div>
+      <div class="team-card-name">${name}</div>
+      <div class="team-card-pct">${td.owned}/12 · ${tp}%</div>
+      <div class="team-card-bar"><div class="team-card-fill" style="width:${tp}%"></div></div>
+    </div>`;
   }
 }
 
-// ── Collection Rendering ──
-let FILTER_OPTIONS = [];
-function buildFilterOptions() {
-  FILTER_OPTIONS = [
-    { key: 'all', label: 'All' },
-    { key: 'missing', label: 'Missing' },
-    { key: 'owned', label: 'Owned' },
-    ...Object.entries(RARITIES).map(([k,v]) => ({ key: 'rar:'+k, label: '● '+v.label })),
-    ...Object.entries(CATEGORIES).map(([k,v]) => ({ key: 'cat:'+k, label: v.icon+' '+v.label })),
-    ...TEAMS_DATA.map(t => ({ key: 'team:'+t.name, label: t.flag+' '+t.name })),
+// ── Collection ──
+let FILTER_OPTIONS=[];
+function buildFilterOptions(){
+  FILTER_OPTIONS=[
+    {key:'all',    label:'All'},
+    {key:'missing',label:'Missing'},
+    {key:'owned',  label:'Owned'},
+    {key:'pos:GK', label:'🥅 GK'},
+    {key:'pos:DF', label:'🛡️ DF'},
+    {key:'pos:MF', label:'⚙️ MF'},
+    {key:'pos:FW', label:'⚡ FW'},
+    ...Object.entries(CAT_META).map(([k,v])=>({key:'cat:'+k,label:v.icon+' '+v.label})),
+    ...TEAMS_LIST.map(t=>({key:'team:'+t,label:teamFlag(t)+' '+t})),
   ];
 }
 
-function renderFilterChips() {
-  const el = document.getElementById('filter-chips');
-  el.innerHTML = FILTER_OPTIONS.slice(0, 40).map(f =>
-    `<div class="filter-chip ${activeFilter === f.key ? 'active' : ''}" onclick="setFilter('${f.key}')">${f.label}</div>`
+function renderFilterChips(){
+  const el=document.getElementById('filter-chips');
+  el.innerHTML=FILTER_OPTIONS.slice(0,55).map(f=>
+    `<div class="filter-chip${activeFilter===f.key?' active':''}" onclick="setFilter('${f.key.replace(/'/g,"\\'")}')">${f.label}</div>`
   ).join('');
 }
 
-function setFilter(key) {
-  activeFilter = key;
-  renderFilterChips();
-  renderCollection();
+function setFilter(key){activeFilter=key;renderFilterChips();renderCollection();}
+
+function openFilter(key){
+  activeFilter=key;searchQuery='';
+  document.getElementById('search-input').value='';
+  renderFilterChips();switchScreen('collection');
 }
 
-function openFilter(key) {
-  activeFilter = key;
-  searchQuery = '';
-  document.getElementById('search-input').value = '';
-  renderFilterChips();
-  switchScreen('collection');
-}
+function filterCards(){searchQuery=document.getElementById('search-input').value.toLowerCase();renderCollection();}
 
-function filterCards() {
-  searchQuery = document.getElementById('search-input').value.toLowerCase();
-  renderCollection();
-}
-
-function getFilteredCards() {
-  return ALL_CARDS.filter(c => {
-    if (activeFilter === 'owned' && !owned.has(c.id)) return false;
-    if (activeFilter === 'missing' && owned.has(c.id)) return false;
-    if (activeFilter.startsWith('cat:') && c.category !== activeFilter.slice(4)) return false;
-    if (activeFilter.startsWith('team:') && c.team !== activeFilter.slice(5)) return false;
-    if (activeFilter.startsWith('rar:') && c.rarity !== activeFilter.slice(4)) return false;
-    if (searchQuery) {
-      const q = searchQuery;
-      if (!c.name.toLowerCase().includes(q) && !c.team.toLowerCase().includes(q) && !String(c.id).includes(q)) return false;
+function getFilteredCards(){
+  return ALL_CARDS.filter(c=>{
+    if(activeFilter==='owned'   &&!owned.has(c.id))return false;
+    if(activeFilter==='missing' && owned.has(c.id))return false;
+    if(activeFilter.startsWith('cat:') &&c.cat !==activeFilter.slice(4))return false;
+    if(activeFilter.startsWith('team:')&&c.team!==activeFilter.slice(5))return false;
+    if(activeFilter.startsWith('rar:') &&catR(c)!==activeFilter.slice(4))return false;
+    if(activeFilter.startsWith('pos:') &&c.pos !==activeFilter.slice(4))return false;
+    if(searchQuery){
+      const q=searchQuery;
+      if(!c.name.toLowerCase().includes(q)&&!c.team.toLowerCase().includes(q)&&!String(c.id).includes(q))return false;
     }
     return true;
   });
 }
 
-function renderCollection() {
-  const cards = getFilteredCards();
-  const list = document.getElementById('coll-list');
-
-  if (!cards.length) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">No cards found</div></div>';
+function renderCollection(){
+  const cards=getFilteredCards();
+  const list=document.getElementById('coll-list');
+  if(!cards.length){
+    list.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">No cards found</div></div>';
     return;
   }
-
-  // Group by team, cards in numeric order
-  cards.sort((a,b) => a.id - b.id);
-  const grouped = {};
-  for (const c of cards) {
-    const group = c.team;
-    if (!grouped[group]) grouped[group] = [];
-    grouped[group].push(c);
+  cards.sort((a,b)=>a.id-b.id);
+  const grouped={};
+  for(const c of cards){
+    if(!grouped[c.team])grouped[c.team]=[];
+    grouped[c.team].push(c);
   }
-
-  let html = '';
-  for (const [group, groupCards] of Object.entries(grouped)) {
-    const teamData = TEAMS_DATA.find(t => t.name === group);
-    const flag = groupCards[0].flag;
-    const groupOwned = groupCards.filter(c => owned.has(c.id)).length;
-    html += `<div class="group-header">
+  let html='';
+  for(const[group,gCards]of Object.entries(grouped)){
+    const flag=gCards[0].flag;
+    const gOwned=gCards.filter(c=>owned.has(c.id)).length;
+    html+=`<div class="group-header">
       <span class="group-flag">${flag}</span>
       <span class="group-name">${group}</span>
-      <span class="group-count">${groupOwned}/${groupCards.length}</span>
-    </div>
-    <div class="cards-grid">`;
-    for (const c of groupCards) {
-      const isOwned = owned.has(c.id);
-      const cat = CATEGORIES[c.category] || { label: c.category, rarity: c.rarity, icon: '' };
-      const rar = c.rarity;
-      const rarClass = `rar-${rar === 'common' ? 'common' : rar === 'rare' ? 'rare' : rar === 'ultra' ? 'ultra' : rar === 'momentum' ? 'momentum' : 'le'}`;
-      const pillClass = `pill-${rar === 'common' ? 'common' : rar === 'rare' ? 'rare' : rar === 'ultra' ? 'ultra' : rar === 'momentum' ? 'momentum' : 'le'}`;
-      const catCss = `cat-${c.category.replace(/[^a-z0-9]/g, '-')}`;
-      const rarLabel = RARITIES[rar] ? RARITIES[rar].label.split(' ')[0] : rar;
-      const catShort = cat.label.replace('Midfield Maestros','Midfield').replace('Master Rookies','Rookies').replace('Defensive Rocks','Defense').replace('Goal Machines','Goals').replace('Fan Favourites','Fan Fav').replace('Team Keepers','Keepers').replace('Team Crests','Crest');
-      const cardNum = String(c.id).padStart(3, '0');
-      const imgUrl = `https://www.coleka.com/media/item/202603/18/adrenalyn-xl-fifa-world-cup-2026-carte-n-1-${cardNum}-001.webp`;
-      html += `<div class="card-item ${isOwned ? 'owned' : ''}" onclick="openModal(${c.id})">
-        <div class="card-art ${catCss}">
+      <span class="group-count">${gOwned}/${gCards.length}</span>
+    </div><div class="cards-grid">`;
+    for(const c of gCards){
+      const isOwned=owned.has(c.id);
+      const cm=CAT_META[c.cat]||{rarity:'common',short:c.cat};
+      const rar=cm.rarity;
+      const cardNum=String(c.id).padStart(3,'0');
+      const imgUrl=`https://www.coleka.com/media/item/202603/18/adrenalyn-xl-fifa-world-cup-2026-carte-n-1-${cardNum}-001.webp`;
+      const posBadge=c.pos?`<span class="card-pos pos-${c.pos.toLowerCase()}">${c.pos}</span>`:'';
+      const rarLabel=(RARITIES[rar]?.label||rar).split(' ')[0];
+      html+=`<div class="card-item${isOwned?' owned':''}" onclick="openModal(${c.id})">
+        <div class="card-art cat-${c.cat}">
           <img class="card-img" src="${imgUrl}" alt="" loading="lazy" onerror="this.style.display='none'">
           <div class="card-top">
-            <span class="card-num">#${String(c.id).padStart(3,'0')}</span>
-            <span class="card-rar ${rarClass}">${rarLabel}</span>
+            <span class="card-num">#${cardNum}</span>
+            <span class="card-rar rar-${rar}">${rarLabel}</span>
           </div>
           <div class="card-flag-wrap"><span class="card-flag">${c.flag}</span></div>
           <div class="card-bottom">
             <div class="card-name">${c.name}</div>
-            <span class="card-cat-pill ${pillClass}">${catShort}</span>
+            <div class="card-bottom-row">${posBadge}<span class="card-cat-pill pill-${rar}">${cm.short}</span></div>
           </div>
         </div>
         <div class="card-check">✓</div>
       </div>`;
     }
-    html += '</div>';
+    html+='</div>';
   }
-  list.innerHTML = html;
+  list.innerHTML=html;
 }
 
 // ── Modal ──
-let modalCardId = null;
-function openModal(cardId) {
-  const card = ALL_CARDS.find(c => c.id === cardId);
-  if (!card) return;
-  modalCardId = cardId;
-
-  const cat = CATEGORIES[card.category] || {};
-  const rar = RARITIES[card.rarity] || {};
-
-  document.getElementById('modal-num').textContent = `#${card.id}`;
-  document.getElementById('modal-name').textContent = `${card.flag} ${card.name}`;
-  document.getElementById('modal-team').textContent = card.team + (cat.label ? ' · ' + cat.label : '');
-  const rm = document.getElementById('modal-rarity');
-  rm.textContent = rar.label || card.rarity;
-  rm.style.background = (rar.color || '#888') + '22';
-  rm.style.color = rar.color || '#888';
-  rm.style.border = `1px solid ${rar.color || '#888'}44`;
-
-  const isOwned = owned.has(cardId);
-  document.getElementById('modal-actions').innerHTML = `
+let modalCardId=null;
+function openModal(cardId){
+  const c=ALL_CARDS.find(x=>x.id===cardId);
+  if(!c)return;
+  modalCardId=cardId;
+  const cm=CAT_META[c.cat]||{label:c.cat,color:'#888',rarity:'common'};
+  const pm=c.pos?POS_META[c.pos]:null;
+  const rar=RARITIES[cm.rarity]||{label:'Common',color:'#8899AA'};
+  const posLabel=pm?' · '+pm.label:'';
+  document.getElementById('modal-num').textContent=`#${String(c.id).padStart(3,'0')}`;
+  document.getElementById('modal-name').textContent=`${c.flag} ${c.name}`;
+  document.getElementById('modal-team').textContent=c.team+' · '+cm.label+posLabel;
+  const rm=document.getElementById('modal-rarity');
+  rm.textContent=rar.label;
+  rm.style.background=rar.color+'22';
+  rm.style.color=rar.color;
+  rm.style.border=`1px solid ${rar.color}44`;
+  const isOwned=owned.has(cardId);
+  document.getElementById('modal-actions').innerHTML=`
     <button class="btn-secondary" onclick="closeModal()">Close</button>
     ${isOwned
-      ? `<button class="btn-remove" onclick="toggleCard(${cardId}, false)">Remove</button>`
-      : `<button class="btn-add" onclick="toggleCard(${cardId}, true)">Add to Collection ✓</button>`}
-  `;
-
+      ?`<button class="btn-remove" onclick="toggleCard(${cardId},false)">Remove</button>`
+      :`<button class="btn-add" onclick="toggleCard(${cardId},true)">Add ✓</button>`}`;
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function closeModal(e) {
-  if (e && e.target !== document.getElementById('modal-overlay')) return;
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('modal-overlay'))return;
   document.getElementById('modal-overlay').classList.remove('open');
-  modalCardId = null;
+  modalCardId=null;
 }
 
-function toggleCard(cardId, add) {
-  const card = ALL_CARDS.find(c => c.id === cardId);
-  if (!card) return;
-
-  if (add) {
+function toggleCard(cardId,add){
+  const c=ALL_CARDS.find(x=>x.id===cardId);if(!c)return;
+  if(add){
     owned.add(cardId);
-    recentAdds = [cardId, ...recentAdds.filter(x => x !== cardId)].slice(0, 10);
+    recentAdds=[cardId,...recentAdds.filter(x=>x!==cardId)].slice(0,10);
     saveRecent();
-    showToast(`✓ #${cardId} ${card.name} added!`, 'success');
-  } else {
+    showToast(`✓ #${cardId} ${c.name} added!`,'success');
+  }else{
     owned.delete(cardId);
-    showToast(`Removed #${cardId} ${card.name}`, 'info');
+    showToast(`Removed #${cardId} ${c.name}`,'info');
   }
-  saveOwned();
-  updateHeader();
-  renderDashboard();
-  renderCollection();
-  renderStats();
-  renderRecentAdds();
-  closeModal();
+  saveOwned();updateHeader();renderDashboard();renderCollection();renderStats();renderRecentAdds();closeModal();
 }
 
-// ── Manual add ──
-function addManual() {
-  const input = document.getElementById('manual-num');
-  const num = parseInt(input.value);
-  if (!num || num < 1 || num > TOTAL) {
-    showToast('Enter a valid card number (1–630)', 'error');
-    return;
-  }
-  input.value = '';
-  openModal(num);
+// ── Manual Add ──
+function addManual(){
+  const input=document.getElementById('manual-num');
+  const num=parseInt(input.value);
+  if(!num||num<1||num>TOTAL){showToast('Enter a valid card number (1–630)','error');return;}
+  input.value='';openModal(num);
 }
-
-document.getElementById('manual-num').addEventListener('keydown', e => {
-  if (e.key === 'Enter') addManual();
-});
+document.getElementById('manual-num').addEventListener('keydown',e=>{if(e.key==='Enter')addManual();});
 
 // ── Scanner ──
-let html5QrCode = null;
-let scannerActive = false;
-
-function startScanner() {
-  if (scannerActive) return;
-  if (!window.Html5Qrcode) { showToast('QR library loading…', 'info'); return; }
-
-  html5QrCode = new Html5Qrcode('reader');
+let html5QrCode=null,scannerActive=false;
+function startScanner(){
+  if(scannerActive)return;
+  if(!window.Html5Qrcode){showToast('QR library loading…','info');return;}
+  html5QrCode=new Html5Qrcode('reader');
   html5QrCode.start(
-    { facingMode: 'environment' },
-    { fps: 10, qrbox: { width: 220, height: 220 } },
-    onScanSuccess,
-    () => {}
-  ).then(() => {
-    scannerActive = true;
-    document.getElementById('scanner-status').innerHTML = `
-      <div class="scanner-status-icon">🟢</div>
-      <div class="scanner-status-text">Scanner Active</div>
-      <div class="scanner-status-sub">Point camera at any QR code</div>`;
-  }).catch(err => {
-    document.getElementById('scanner-status').innerHTML = `
-      <div class="scanner-status-icon">❌</div>
-      <div class="scanner-status-text">Camera not available</div>
-      <div class="scanner-status-sub">Use manual entry below</div>`;
+    {facingMode:'environment'},
+    {fps:10,qrbox:{width:220,height:220}},
+    onScanSuccess,()=>{}
+  ).then(()=>{
+    scannerActive=true;
+    document.getElementById('scanner-status').innerHTML=`<div class="scanner-status-icon">🟢</div><div class="scanner-status-text">Scanner Active</div><div class="scanner-status-sub">Point camera at any QR code</div>`;
+  }).catch(()=>{
+    document.getElementById('scanner-status').innerHTML=`<div class="scanner-status-icon">❌</div><div class="scanner-status-text">Camera not available</div><div class="scanner-status-sub">Use manual entry below</div>`;
   });
 }
-
-function stopScanner() {
-  if (html5QrCode && scannerActive) {
-    html5QrCode.stop().then(() => { scannerActive = false; }).catch(() => {});
-  }
+function stopScanner(){if(html5QrCode&&scannerActive)html5QrCode.stop().then(()=>{scannerActive=false;}).catch(()=>{});}
+function onScanSuccess(text){
+  const nums=text.match(/\d+/g);
+  if(!nums){showToast('No card number found. Use manual entry.','info');return;}
+  const n=nums.map(Number).find(x=>x>=1&&x<=TOTAL);
+  if(!n){showToast('No valid card # found. Try manual entry.','info');return;}
+  if(owned.has(n)){showToast(`#${n} already in your collection`,'info');return;}
+  openModal(n);
 }
 
-function onScanSuccess(decodedText) {
-  // Extract numbers from QR text
-  const nums = decodedText.match(/\d+/g);
-  if (!nums) { showToast('QR code read — no card number found. Use manual entry.', 'info'); return; }
-
-  // Find a number in 1-630 range
-  const cardNum = nums.map(Number).find(n => n >= 1 && n <= TOTAL);
-  if (!cardNum) { showToast('QR read but no valid card # found. Try manual entry.', 'info'); return; }
-
-  if (owned.has(cardNum)) {
-    showToast(`#${cardNum} already in your collection`, 'info');
-    return;
-  }
-
-  openModal(cardNum);
-}
-
-// ── Recent adds ──
-function renderRecentAdds() {
-  const box = document.getElementById('recent-adds-box');
-  const list = document.getElementById('recent-list');
-  if (!recentAdds.length) { box.style.display = 'none'; return; }
-  box.style.display = 'block';
-  list.innerHTML = recentAdds.slice(0, 8).map(id => {
-    const c = ALL_CARDS.find(x => x.id === id);
-    if (!c) return '';
-    return `<div class="recent-item">
-      <span class="recent-num">#${c.id}</span>
-      <span class="recent-name">${c.name}</span>
-      <span class="recent-team">${c.flag} ${c.team}</span>
-    </div>`;
+// ── Recent Adds ──
+function renderRecentAdds(){
+  const box=document.getElementById('recent-adds-box');
+  const list=document.getElementById('recent-list');
+  if(!recentAdds.length){box.style.display='none';return;}
+  box.style.display='block';
+  list.innerHTML=recentAdds.slice(0,8).map(id=>{
+    const c=ALL_CARDS.find(x=>x.id===id);
+    return c?`<div class="recent-item"><span class="recent-num">#${c.id}</span><span class="recent-name">${c.name}</span><span class="recent-team">${c.flag} ${c.team}</span></div>`:'';
   }).join('');
 }
 
-// ── Stats Screen ──
-function renderStats() {
-  const n = owned.size;
-  const p = pct(n, TOTAL);
-  const stats = getStats();
+// ── Stats ──
+function renderStats(){
+  const n=owned.size,p=pct(n,TOTAL);
+  const stats=getStats();
+  const circ=2*Math.PI*68;
+  document.getElementById('ring-circle').style.strokeDashoffset=circ-(p/100)*circ;
+  document.getElementById('ring-circle').setAttribute('stroke-dasharray',`${circ} ${circ}`);
+  document.getElementById('ring-pct').textContent=p+'%';
 
-  // Ring
-  const circumference = 2 * Math.PI * 68;
-  const offset = circumference - (p / 100) * circumference;
-  document.getElementById('ring-circle').style.strokeDashoffset = offset;
-  document.getElementById('ring-circle').setAttribute('stroke-dasharray', `${circumference} ${circumference}`);
-  document.getElementById('ring-pct').textContent = p + '%';
-
-  // Rarity
-  const srl = document.getElementById('stats-rarity-list');
-  srl.innerHTML = '';
-  for (const [key, r] of Object.entries(RARITIES)) {
-    const rd = stats.byRarity[key] || { total: 0, owned: 0 };
-    const rp = pct(rd.owned, rd.total);
-    srl.innerHTML += `
-      <div class="rarity-row" data-filter="rar:${key}" onclick="openFilter(this.dataset.filter)">
-        <div class="rarity-dot" style="background:${r.color}"></div>
-        <div class="rarity-info">
-          <div class="rarity-name">${r.label}</div>
-          <div class="rarity-nums">${rd.owned} / ${rd.total}</div>
-        </div>
-        <div class="rarity-pct">${rp}%</div>
-      </div>`;
+  // By Rarity
+  const srl=document.getElementById('stats-rarity-list');srl.innerHTML='';
+  for(const[key,r]of Object.entries(RARITIES)){
+    const rd=stats.byRarity[key]||{total:0,owned:0};
+    const rp=pct(rd.owned,rd.total);
+    srl.innerHTML+=`<div class="rarity-row" data-filter="rar:${key}" onclick="openFilter(this.dataset.filter)">
+      <div class="rarity-dot" style="background:${r.color}"></div>
+      <div class="rarity-info"><div class="rarity-name">${r.label}</div><div class="rarity-nums">${rd.owned} / ${rd.total}</div></div>
+      <div class="rarity-pct">${rp}%</div></div>`;
   }
 
-  // Categories
-  const scl = document.getElementById('stats-cat-list');
-  scl.innerHTML = '';
-  for (const [catKey, cat] of Object.entries(CATEGORIES)) {
-    const cd = stats.byCat[catKey] || { total: 0, owned: 0 };
-    const cp = pct(cd.owned, cd.total);
-    scl.innerHTML += `
-      <div class="cat-row" data-filter="cat:${catKey}" onclick="openFilter(this.dataset.filter)">
-        <div class="cat-top">
-          <div class="cat-name"><span class="cat-icon">${cat.icon}</span>${cat.label}</div>
-          <div class="cat-stat">${cd.owned}/${cd.total} · ${cp}%</div>
-        </div>
-        <div class="cat-bar"><div class="cat-bar-fill" style="width:${cp}%;background:${cat.color}"></div></div>
-      </div>`;
+  // By Category
+  const scl=document.getElementById('stats-cat-list');scl.innerHTML='';
+  for(const[catKey,cm]of Object.entries(CAT_META)){
+    const cd=stats.byCat[catKey]||{total:0,owned:0};
+    if(!cd.total)continue;
+    const cp=pct(cd.owned,cd.total);
+    scl.innerHTML+=`<div class="cat-row" data-filter="cat:${catKey}" onclick="openFilter(this.dataset.filter)">
+      <div class="cat-top">
+        <div class="cat-name"><span class="cat-icon">${cm.icon}</span>${cm.label}</div>
+        <div class="cat-stat">${cd.owned}/${cd.total} · ${cp}%</div>
+      </div>
+      <div class="cat-bar"><div class="cat-bar-fill" style="width:${cp}%;background:${cm.color}"></div></div>
+    </div>`;
   }
 
-  // Teams
-  const stl = document.getElementById('stats-team-list');
-  stl.innerHTML = '';
-  const teamsSorted = TEAMS_DATA.map(t => ({
-    ...t,
-    ...(stats.byTeam[t.name] || { total: 0, owned: 0 })
-  })).sort((a,b) => pct(b.owned,b.total) - pct(a.owned,a.total));
+  // By Position
+  const spl=document.getElementById('stats-pos-list');spl.innerHTML='';
+  for(const[posKey,pm]of Object.entries(POS_META)){
+    const pd=stats.byPos[posKey]||{total:0,owned:0};
+    const pp=pct(pd.owned,pd.total);
+    spl.innerHTML+=`<div class="rarity-row" data-filter="pos:${posKey}" onclick="openFilter(this.dataset.filter)">
+      <div class="rarity-dot" style="background:${pm.color}"></div>
+      <div class="rarity-info"><div class="rarity-name">${posKey} · ${pm.label}</div><div class="rarity-nums">${pd.owned} / ${pd.total}</div></div>
+      <div class="rarity-pct">${pp}%</div></div>`;
+  }
 
-  for (const t of teamsSorted) {
-    const tp = pct(t.owned, t.total);
-    stl.innerHTML += `
-      <div class="rarity-row" data-filter="team:${t.name}" onclick="openFilter(this.dataset.filter)">
-        <div style="font-size:18px">${t.flag}</div>
-        <div class="rarity-info">
-          <div class="rarity-name">${t.name}</div>
-          <div class="rarity-nums">${t.owned} / ${t.total}</div>
-        </div>
-        <div class="rarity-pct">${tp}%</div>
-      </div>`;
+  // By Team (sorted by completion %)
+  const stl=document.getElementById('stats-team-list');stl.innerHTML='';
+  const sorted=TEAMS_LIST
+    .map(name=>({name,flag:teamFlag(name),...(stats.byTeam[name]||{total:0,owned:0})}))
+    .sort((a,b)=>pct(b.owned,b.total)-pct(a.owned,a.total));
+  for(const t of sorted){
+    const tp=pct(t.owned,t.total);
+    stl.innerHTML+=`<div class="rarity-row" data-filter="team:${t.name}" onclick="openFilter(this.dataset.filter)">
+      <div style="font-size:18px">${t.flag}</div>
+      <div class="rarity-info"><div class="rarity-name">${t.name}</div><div class="rarity-nums">${t.owned} / ${t.total}</div></div>
+      <div class="rarity-pct">${tp}%</div></div>`;
   }
 }
 
 // ── Navigation ──
-function switchScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('screen-' + name).classList.add('active');
-  document.getElementById('nav-' + name).classList.add('active');
-
-  if (name === 'scanner') {
-    startScanner();
-  } else {
-    stopScanner();
-  }
-
-  if (name === 'dashboard') renderDashboard();
-  if (name === 'collection') renderCollection();
-  if (name === 'stats') renderStats();
+function switchScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if(name==='scanner')startScanner();else stopScanner();
+  if(name==='dashboard') renderDashboard();
+  if(name==='collection')renderCollection();
+  if(name==='stats')     renderStats();
 }
 
 // ── Toast ──
-let toastTimer = null;
-function showToast(msg, type = 'info') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast ${type} show`;
+let toastTimer=null;
+function showToast(msg,type='info'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=`toast ${type} show`;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.classList.remove('show'); }, 2800);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
 }
 
 // ── Init ──
-buildFilterOptions();
-renderFilterChips();
-updateHeader();
-renderDashboard();
-renderCollection();
-renderStats();
-renderRecentAdds();
+buildFilterOptions();renderFilterChips();updateHeader();renderDashboard();renderCollection();renderStats();renderRecentAdds();
 </script>
+
 </body>
 </html>
