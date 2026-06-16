@@ -45,8 +45,10 @@
     .header-title { font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 0.5px; text-transform: uppercase; }
     .header-subtitle { font-size: 10px; color: var(--text-muted); letter-spacing: 0.3px; }
     .header-count { text-align: right; }
-    .count-big { font-size: 22px; font-weight: 800; color: var(--gold); line-height: 1; }
+    .count-big { font-size: 22px; font-weight: 800; color: var(--gold); line-height: 1; display: flex; align-items: baseline; justify-content: flex-end; gap: 6px; }
+    .count-pct { font-size: 13px; font-weight: 700; color: var(--white); opacity: 0.85; }
     .count-label { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .count-dupes { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
     .progress-bar-wrap { background: rgba(255,255,255,0.1); border-radius: 99px; height: 6px; overflow: hidden; }
     .progress-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); transition: width 0.4s ease; }
 
@@ -392,8 +394,9 @@
       </div>
       <div class="header-right">
         <div class="header-count">
-          <div class="count-big" id="hdr-owned">0</div>
-          <div class="count-label">of 630 cards</div>
+          <div class="count-big"><span id="hdr-owned">0</span><span class="count-pct" id="hdr-pct">0%</span></div>
+          <div class="count-label">de 630 cartas</div>
+          <div class="count-dupes" id="hdr-dupes">🔁 0 repetidas</div>
         </div>
         <button class="logout-btn" id="logout-btn" onclick="doLogout()" title="Sair">Sair</button>
       </div>
@@ -1324,9 +1327,12 @@ function getStats(){
 
 // ── Header ──
 function updateHeader(){
-  const n=owned.size;
+  const n=owned.size, p=pct(n,TOTAL);
   document.getElementById('hdr-owned').textContent=n;
-  document.getElementById('hdr-bar').style.width=pct(n,TOTAL)+'%';
+  document.getElementById('hdr-pct').textContent=p+'%';
+  const totalDupes=Object.values(dupes).reduce((s,q)=>s+(q||0),0);
+  document.getElementById('hdr-dupes').textContent='🔁 '+totalDupes+' repetida'+(totalDupes===1?'':'s');
+  document.getElementById('hdr-bar').style.width=p+'%';
 }
 
 // ── Dashboard ──
@@ -1931,6 +1937,7 @@ async function doSignup(){
   try{
     await fbAuth.createUserWithEmailAndPassword(email,pass);
     sendWelcomeEmail(email);
+    showToast('Conta criada! Enviamos um email de boas-vindas 📧','success');
   }
   catch(e){ authMsg(authErrPt(e.code)); }
   finally{ setAuthBusy(false); }
