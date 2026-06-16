@@ -298,8 +298,12 @@
     .modal-overlay.open .modal-sheet { transform: translateY(0); }
     .modal-close-btn { position: absolute; top: calc(env(safe-area-inset-top,0px) + 14px); right: 16px; width: 36px; height: 36px; background: rgba(255,255,255,0.12); border: none; border-radius: 50%; color: var(--white); font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; }
     .modal-img-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: calc(env(safe-area-inset-top,0px) + 56px) 40px 16px; min-height: 0; }
-    .modal-img { max-height: 100%; max-width: 220px; width: auto; border-radius: 14px; box-shadow: 0 24px 64px rgba(0,0,0,0.6); object-fit: contain; }
-    .modal-img-placeholder { width: 160px; height: 224px; background: rgba(255,255,255,0.05); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 56px; }
+    .modal-card-visual { width: 168px; height: 235px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 24px 64px rgba(0,0,0,0.6); overflow: hidden; position: relative; flex-shrink: 0; }
+    .modal-card-visual::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.55)); pointer-events: none; }
+    .modal-cv-icon { font-size: 30px; position: relative; z-index: 1; }
+    .modal-cv-flag { font-size: 54px; position: relative; z-index: 1; line-height: 1; }
+    .modal-cv-name { font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.9); text-align: center; padding: 0 10px; position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(0,0,0,0.7); max-width: 100%; }
+    .modal-cv-num { font-size: 10px; color: rgba(255,255,255,0.5); position: relative; z-index: 1; }
     .modal-info { padding: 16px 20px 0; flex-shrink: 0; }
     .modal-card-num { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
     .modal-card-name { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
@@ -478,8 +482,12 @@
   <div class="modal-sheet" id="modal-sheet">
     <button class="modal-close-btn" onclick="closeModal()">✕</button>
     <div class="modal-img-wrap">
-      <img class="modal-img" id="modal-img" src="" alt="" onerror="this.style.display='none';document.getElementById('modal-placeholder').style.display='flex'">
-      <div class="modal-img-placeholder" id="modal-placeholder" style="display:none">🃏</div>
+      <div class="modal-card-visual" id="modal-card-visual">
+        <div class="modal-cv-icon" id="modal-cv-icon"></div>
+        <div class="modal-cv-flag" id="modal-cv-flag"></div>
+        <div class="modal-cv-name" id="modal-cv-name"></div>
+        <div class="modal-cv-num" id="modal-cv-num"></div>
+      </div>
     </div>
     <div class="modal-info">
       <div class="modal-card-num" id="modal-num"></div>
@@ -1369,10 +1377,12 @@ function openModal(cardId){
   const rar=RARITIES[cm.rarity]||{label:'Common',color:'#8899AA'};
   const posLabel=pm?' · '+pm.label:'';
   const cardNum=String(c.id).padStart(3,'0');
-  const imgEl=document.getElementById('modal-img');
-  const phEl=document.getElementById('modal-placeholder');
-  imgEl.style.display='';phEl.style.display='none';
-  imgEl.src=`https://www.coleka.com/media/item/202603/18/adrenalyn-xl-fifa-world-cup-2026-carte-n-1-${cardNum}-001.webp`;
+  const cv=document.getElementById('modal-card-visual');
+  cv.className=`modal-card-visual cat-${c.cat}`;
+  document.getElementById('modal-cv-icon').textContent=cm.icon;
+  document.getElementById('modal-cv-flag').textContent=c.flag;
+  document.getElementById('modal-cv-name').textContent=c.name;
+  document.getElementById('modal-cv-num').textContent=`#${cardNum}`;
   document.getElementById('modal-num').textContent=`#${cardNum}`;
   document.getElementById('modal-name').textContent=`${c.flag} ${c.name}`;
   document.getElementById('modal-team').textContent=c.team+' · '+cm.label+posLabel;
