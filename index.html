@@ -301,9 +301,16 @@
     .modal-sheet { position: absolute; inset: 0; background: var(--navy-dark); display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.32s cubic-bezier(0.4,0,0.2,1); overflow: hidden; }
     .modal-overlay.open .modal-sheet { transform: translateY(0); }
     .modal-close-btn { position: absolute; top: calc(env(safe-area-inset-top,0px) + 14px); right: 16px; width: 36px; height: 36px; background: rgba(255,255,255,0.12); border: none; border-radius: 50%; color: var(--white); font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; }
-    .modal-img-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: calc(env(safe-area-inset-top,0px) + 56px) 40px 16px; min-height: 0; }
-    .modal-card-visual { width: 168px; height: 235px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 24px 64px rgba(0,0,0,0.6); overflow: hidden; position: relative; flex-shrink: 0; }
-    .modal-card-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
+    .modal-img-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: calc(env(safe-area-inset-top,0px) + 56px) 56px 12px; min-height: 0; position: relative; }
+    /* Card fills the available area, keeping its aspect ratio (fits height or width) */
+    .modal-card-visual { width: auto; height: 100%; max-width: 100%; aspect-ratio: 792 / 1120; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 24px 64px rgba(0,0,0,0.6); overflow: hidden; position: relative; }
+    .modal-card-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #0a1322; border-radius: 14px; }
+    /* Modal nav arrows */
+    .modal-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.14); color: #fff; border: none; font-size: 26px; line-height: 1; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+    .modal-nav-btn:active { transform: translateY(-50%) scale(0.9); }
+    .modal-nav-btn:disabled { opacity: 0.25; cursor: default; }
+    .modal-nav-btn.prev { left: 8px; }
+    .modal-nav-btn.next { right: 8px; }
     @keyframes cardPop { from { opacity: 0.45; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     .modal-card-visual.nav-anim { animation: cardPop 0.18s ease; }
     .modal-card-visual::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.55)); pointer-events: none; }
@@ -574,6 +581,7 @@
   <div class="modal-sheet" id="modal-sheet">
     <button class="modal-close-btn" onclick="closeModal()">✕</button>
     <div class="modal-img-wrap">
+      <button class="modal-nav-btn prev" id="modal-prev" onclick="modalNav(-1)" aria-label="Previous card">‹</button>
       <div class="modal-card-visual" id="modal-card-visual">
         <img class="modal-card-photo" id="modal-card-photo" src="" alt="" onerror="this.style.display='none'">
         <div class="modal-cv-icon" id="modal-cv-icon"></div>
@@ -581,6 +589,7 @@
         <div class="modal-cv-name" id="modal-cv-name"></div>
         <div class="modal-cv-num" id="modal-cv-num"></div>
       </div>
+      <button class="modal-nav-btn next" id="modal-next" onclick="modalNav(1)" aria-label="Next card">›</button>
     </div>
     <div class="modal-info">
       <div class="modal-card-num" id="modal-num"></div>
@@ -1532,6 +1541,9 @@ function openModal(cardId){
   const isOwned=owned.has(cardId);
   cv.classList.toggle('owned',isOwned);
   cv.classList.remove('nav-anim'); void cv.offsetWidth; cv.classList.add('nav-anim');
+  const navIds=ALL_CARDS.map(x=>x.id).sort((a,b)=>a-b), navPos=navIds.indexOf(cardId);
+  document.getElementById('modal-prev').disabled=navPos<=0;
+  document.getElementById('modal-next').disabled=navPos>=navIds.length-1;
   document.getElementById('modal-actions').innerHTML=isOwned
     ?`<button class="btn-remove" onclick="toggleCard(${cardId},false)">Remove from collection</button>`
     :`<button class="btn-add" onclick="toggleCard(${cardId},true)">Add to collection ✓</button>`;
