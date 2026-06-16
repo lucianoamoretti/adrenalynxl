@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#0A1930">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>WC 2026 · Adrenalyn XL Tracker</title>
+  <style>
+    :root {
+      --navy: #0A1930;
+      --navy-dark: #050D1A;
+      --navy-mid: #0F2444;
+      --navy-light: #1A3A6E;
+      --gold: #F4C430;
+      --gold-dark: #C9961E;
+      --red: #D31F2A;
+      --white: #FFFFFF;
+      --text-muted: rgba(255,255,255,0.55);
+      --text-dim: rgba(255,255,255,0.35);
+      --card-bg: #0F2444;
+      --card-border: rgba(244,196,48,0.15);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --nav-h: 68px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: var(--navy-dark); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--white); }
+    #app { display: flex; flex-direction: column; height: 100%; }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #0A1930 0%, #1A3A6E 100%);
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 16px 10px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+    .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .header-logo { display: flex; align-items: center; gap: 8px; }
+    .header-logo svg { flex-shrink: 0; }
+    .header-title { font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 0.5px; text-transform: uppercase; }
+    .header-subtitle { font-size: 10px; color: var(--text-muted); letter-spacing: 0.3px; }
+    .header-count { text-align: right; }
+    .count-big { font-size: 22px; font-weight: 800; color: var(--gold); line-height: 1; }
+    .count-label { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .progress-bar-wrap { background: rgba(255,255,255,0.1); border-radius: 99px; height: 6px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); transition: width 0.4s ease; }
+
+    /* ── Screens ── */
+    .screens { flex: 1; overflow: hidden; position: relative; }
+    .screen { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; display: none; padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 8px); }
+    .screen.active { display: block; }
+
+    /* ── Bottom Nav ── */
+    .bottom-nav {
+      flex-shrink: 0;
+      background: rgba(10,25,48,0.97);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      height: calc(var(--nav-h) + var(--safe-bottom));
+      padding-bottom: var(--safe-bottom);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 10;
+    }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: none; cursor: pointer; color: var(--text-muted); transition: color 0.15s; padding: 0; }
+    .nav-btn.active { color: var(--gold); }
+    .nav-btn svg { transition: transform 0.15s; }
+    .nav-btn.active svg { transform: scale(1.1); }
+    .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
+
+    /* ── Dashboard Screen ── */
+    .dash-pad { padding: 16px 16px 0; }
+    .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 14px 12px; }
+    .stat-card-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+    .stat-card-val { font-size: 24px; font-weight: 800; line-height: 1; }
+    .stat-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .stat-card-bar { height: 3px; background: rgba(255,255,255,0.1); border-radius: 99px; margin-top: 8px; overflow: hidden; }
+    .stat-card-bar-fill { height: 100%; border-radius: 99px; transition: width 0.4s; }
+
+    .section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+
+    .rarity-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .rarity-row { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; gap: 12px; }
+    .rarity-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .rarity-info { flex: 1; }
+    .rarity-name { font-size: 13px; font-weight: 600; }
+    .rarity-nums { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .rarity-pct { font-size: 14px; font-weight: 700; color: var(--gold); }
+
+    .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .team-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 10px; position: relative; overflow: hidden; }
+    .team-card-flag { font-size: 22px; margin-bottom: 3px; }
+    .team-card-name { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .team-card-pct { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .team-card-bar { height: 2px; background: rgba(255,255,255,0.1); border-radius: 99px; margin-top: 6px; overflow: hidden; }
+    .team-card-fill { height: 100%; border-radius: 99px; background: var(--gold); transition: width 0.4s; }
+
+    /* ── Collection Screen ── */
+    .coll-header { padding: 12px 16px 0; position: sticky; top: 0; background: var(--navy-dark); z-index: 5; }
+    .search-wrap { position: relative; margin-bottom: 10px; }
+    .search-input { width: 100%; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 99px; padding: 10px 16px 10px 38px; color: var(--white); font-size: 14px; outline: none; }
+    .search-input::placeholder { color: var(--text-dim); }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; }
+    .filter-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; -ms-overflow-style: none; scrollbar-width: none; }
+    .filter-scroll::-webkit-scrollbar { display: none; }
+    .filter-chip { flex-shrink: 0; padding: 6px 14px; border-radius: 99px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+    .filter-chip.active { background: var(--gold); border-color: var(--gold); color: var(--navy-dark); }
+
+    .coll-list { padding: 0 12px; }
+    .group-header { padding: 12px 4px 6px; display: flex; align-items: center; gap: 8px; }
+    .group-flag { font-size: 18px; }
+    .group-name { font-size: 13px; font-weight: 700; flex: 1; }
+    .group-count { font-size: 11px; color: var(--text-muted); }
+
+    .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 0 4px; }
+    .card-item { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+    .card-item.owned { border-color: var(--gold); background: rgba(244,196,48,0.08); }
+    .card-item.owned::after { content: '✓'; position: absolute; top: 4px; right: 6px; font-size: 10px; color: var(--gold); font-weight: 700; }
+    .card-num { font-size: 9px; color: var(--text-dim); font-weight: 600; }
+    .card-name { font-size: 10px; font-weight: 600; line-height: 1.2; word-break: break-word; }
+    .card-badge { font-size: 8px; font-weight: 700; padding: 1px 5px; border-radius: 99px; margin-top: 2px; letter-spacing: 0.2px; }
+    .badge-common { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+    .badge-rare { background: rgba(100,149,237,0.25); color: #6495ED; }
+    .badge-ultra { background: rgba(148,0,211,0.25); color: #DA70D6; }
+    .badge-momentum { background: rgba(255,69,0,0.25); color: #FF6347; }
+    .badge-le { background: rgba(255,215,0,0.25); color: var(--gold); }
+
+    /* ── Scanner Screen ── */
+    .scanner-wrap { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .qr-viewport { background: var(--navy-mid); border: 2px dashed var(--gold); border-radius: var(--radius); overflow: hidden; position: relative; aspect-ratio: 1; max-width: 320px; margin: 0 auto; width: 100%; }
+    .qr-viewport #reader { width: 100% !important; }
+    .qr-viewport #reader video { width: 100% !important; height: auto !important; object-fit: cover; }
+    .qr-viewport #reader > div:first-child { display: none !important; }
+    .qr-overlay { position: absolute; inset: 0; pointer-events: none; }
+    .qr-corner { position: absolute; width: 28px; height: 28px; border-color: var(--gold); border-style: solid; }
+    .qr-corner.tl { top: 10px; left: 10px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+    .qr-corner.tr { top: 10px; right: 10px; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+    .qr-corner.bl { bottom: 10px; left: 10px; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+    .qr-corner.br { bottom: 10px; right: 10px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+    .qr-scan-line { position: absolute; left: 10px; right: 10px; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); animation: scanline 2s ease-in-out infinite; }
+    @keyframes scanline { 0%,100% { top: 10%; } 50% { top: 90%; } }
+
+    .scanner-status { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 14px 16px; text-align: center; }
+    .scanner-status-icon { font-size: 28px; margin-bottom: 6px; }
+    .scanner-status-text { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .scanner-status-sub { font-size: 12px; color: var(--text-muted); }
+
+    .manual-add { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 14px 16px; }
+    .manual-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+    .manual-row { display: flex; gap: 8px; }
+    .manual-input { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid var(--card-border); border-radius: 99px; padding: 10px 16px; color: var(--white); font-size: 16px; outline: none; }
+    .manual-input:focus { border-color: var(--gold); }
+    .btn-primary { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: var(--navy-dark); border: none; border-radius: 99px; padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+    .btn-primary:active { opacity: 0.85; }
+
+    .recent-adds { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 14px 16px; }
+    .recent-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .recent-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .recent-num { font-size: 11px; font-weight: 700; color: var(--gold); background: rgba(244,196,48,0.1); padding: 3px 8px; border-radius: 99px; }
+    .recent-name { font-size: 12px; flex: 1; }
+    .recent-team { font-size: 11px; color: var(--text-muted); }
+
+    /* ── Stats Screen ── */
+    .stats-pad { padding: 16px 16px 0; }
+    .big-ring-wrap { display: flex; justify-content: center; margin-bottom: 20px; }
+    .big-ring { position: relative; display: flex; align-items: center; justify-content: center; }
+    .big-ring svg { transform: rotate(-90deg); }
+    .big-ring-text { position: absolute; text-align: center; }
+    .big-ring-pct { font-size: 36px; font-weight: 800; color: var(--gold); line-height: 1; }
+    .big-ring-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .category-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .cat-row { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 12px 14px; }
+    .cat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .cat-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .cat-icon { font-size: 14px; }
+    .cat-stat { font-size: 12px; color: var(--text-muted); }
+    .cat-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden; }
+    .cat-bar-fill { height: 100%; border-radius: 99px; transition: width 0.4s; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px); left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(15,36,68,0.97); border: 1px solid var(--gold); border-radius: 99px; padding: 10px 20px; font-size: 13px; font-weight: 600; color: var(--white); opacity: 0; transition: all 0.25s; pointer-events: none; z-index: 100; white-space: nowrap; max-width: 90vw; text-align: center; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: #2ECC71; background: rgba(46,204,113,0.12); }
+    .toast.error { border-color: var(--red); background: rgba(211,31,42,0.12); }
+    .toast.info { border-color: var(--gold); }
+
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-sheet { background: var(--navy-mid); border-radius: 20px 20px 0 0; width: 100%; max-width: 480px; padding: 20px 20px calc(var(--safe-bottom) + 20px); transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+    .modal-overlay.open .modal-sheet { transform: translateY(0); }
+    .modal-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 99px; margin: 0 auto 16px; }
+    .modal-card-num { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+    .modal-card-name { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .modal-card-team { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
+    .modal-rarity { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; margin-bottom: 16px; }
+    .modal-actions { display: flex; gap: 10px; }
+    .btn-secondary { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 99px; padding: 12px; font-size: 14px; font-weight: 700; color: var(--white); cursor: pointer; }
+    .btn-add { flex: 1; background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: var(--navy-dark); border: none; border-radius: 99px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-remove { flex: 1; background: rgba(211,31,42,0.15); border: 1px solid var(--red); border-radius: 99px; padding: 12px; font-size: 14px; font-weight: 700; color: var(--red); cursor: pointer; }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-text { font-size: 14px; }
+
+    @media (max-width: 360px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="header-logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="15" fill="#1A3A6E" stroke="#F4C430" stroke-width="1.5"/>
+          <text x="16" y="20" text-anchor="middle" font-size="13" font-weight="900" fill="#F4C430" font-family="Arial">26</text>
+        </svg>
+        <div>
+          <div class="header-title">Adrenalyn XL</div>
+          <div class="header-subtitle">FIFA World Cup 2026™</div>
+        </div>
+      </div>
+      <div class="header-count">
+        <div class="count-big" id="hdr-owned">0</div>
+        <div class="count-label">of 630 cards</div>
+      </div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="hdr-bar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="screens">
+    <!-- DASHBOARD -->
+    <div class="screen active" id="screen-dashboard">
+      <div class="dash-pad">
+        <div class="stat-cards">
+          <div class="stat-card">
+            <div class="stat-card-label">Collected</div>
+            <div class="stat-card-val" id="s-owned" style="color:var(--gold)">0</div>
+            <div class="stat-card-sub" id="s-owned-pct">0% complete</div>
+            <div class="stat-card-bar"><div class="stat-card-bar-fill" id="sb-owned" style="width:0%;background:var(--gold)"></div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Missing</div>
+            <div class="stat-card-val" id="s-missing" style="color:var(--red)">630</div>
+            <div class="stat-card-sub">cards to find</div>
+            <div class="stat-card-bar"><div class="stat-card-bar-fill" id="sb-missing" style="width:100%;background:var(--red)"></div></div>
+          </div>
+        </div>
+
+        <div class="section-title">By Rarity</div>
+        <div class="rarity-list" id="rarity-list"></div>
+
+        <div class="section-title">By Category</div>
+        <div class="rarity-list" id="category-summary-list"></div>
+
+        <div class="section-title">Teams</div>
+        <div class="team-grid" id="team-grid"></div>
+      </div>
+    </div>
+
+    <!-- COLLECTION -->
+    <div class="screen" id="screen-collection">
+      <div class="coll-header">
+        <div class="search-wrap">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398l3.85 3.85a1 1 0 0 0 1.415-1.415l-3.868-3.833zm-5.242 1.06a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+          </svg>
+          <input class="search-input" id="search-input" type="search" placeholder="Search cards, players…" oninput="filterCards()">
+        </div>
+        <div class="filter-scroll" id="filter-chips"></div>
+      </div>
+      <div class="coll-list" id="coll-list"></div>
+    </div>
+
+    <!-- SCANNER -->
+    <div class="screen" id="screen-scanner">
+      <div class="scanner-wrap">
+        <div class="qr-viewport">
+          <div id="reader"></div>
+          <div class="qr-overlay">
+            <div class="qr-corner tl"></div>
+            <div class="qr-corner tr"></div>
+            <div class="qr-corner bl"></div>
+            <div class="qr-corner br"></div>
+            <div class="qr-scan-line"></div>
+          </div>
+        </div>
+        <div class="scanner-status" id="scanner-status">
+          <div class="scanner-status-icon">📷</div>
+          <div class="scanner-status-text">Point at a QR code</div>
+          <div class="scanner-status-sub">Cards with QR codes will be added automatically</div>
+        </div>
+        <div class="manual-add">
+          <div class="manual-title">Add by Number</div>
+          <div class="manual-row">
+            <input class="manual-input" id="manual-num" type="number" min="1" max="630" placeholder="1 – 630" inputmode="numeric">
+            <button class="btn-primary" onclick="addManual()">Add</button>
+          </div>
+        </div>
+        <div class="recent-adds" id="recent-adds-box" style="display:none">
+          <div class="section-title" style="margin-bottom:8px">Recently Added</div>
+          <div id="recent-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="screen" id="screen-stats">
+      <div class="stats-pad">
+        <div class="big-ring-wrap">
+          <div class="big-ring">
+            <svg width="160" height="160" viewBox="0 0 160 160">
+              <circle cx="80" cy="80" r="68" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12"/>
+              <circle cx="80" cy="80" r="68" fill="none" stroke="url(#ringGrad)" stroke-width="12" stroke-linecap="round" id="ring-circle" stroke-dasharray="427 427" stroke-dashoffset="427"/>
+              <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#C9961E"/>
+                  <stop offset="100%" stop-color="#F4C430"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="big-ring-text">
+              <div class="big-ring-pct" id="ring-pct">0%</div>
+              <div class="big-ring-sub">Complete</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">By Rarity</div>
+        <div class="rarity-list" id="stats-rarity-list"></div>
+
+        <div class="section-title">By Category</div>
+        <div class="category-list" id="stats-cat-list"></div>
+
+        <div class="section-title">Team Progress</div>
+        <div class="rarity-list" id="stats-team-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-dashboard" onclick="switchScreen('dashboard')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-btn" id="nav-collection" onclick="switchScreen('collection')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+      <span class="nav-label">Collection</span>
+    </button>
+    <button class="nav-btn" id="nav-scanner" onclick="switchScreen('scanner')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M21 5h-6v6h6V5zm-6 8h1.5v1.5H15V13zm1.5 1.5H18V16h-1.5v-1.5zM18 13h1.5v1.5H18V13zm-3 3h1.5v1.5H15V16zm1.5 1.5H18V19h-1.5v-1.5zM18 16h1.5v1.5H18V16zm1.5-1.5H21V16h-1.5v-1.5zm0 3H21V19h-1.5v-1.5zM22 7h-1V3h-4V2h5v5zM7 22v-1H3v-4H2v5h5zm13 0h-4v-1h3v-3h1v4zM3 7V3h4V2H2v5h1z"/></svg>
+      <span class="nav-label">Scanner</span>
+    </button>
+    <button class="nav-btn" id="nav-stats" onclick="switchScreen('stats')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      <span class="nav-label">Stats</span>
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal-sheet" id="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-card-num" id="modal-num"></div>
+    <div class="modal-card-name" id="modal-name"></div>
+    <div class="modal-card-team" id="modal-team"></div>
+    <div class="modal-rarity" id="modal-rarity"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CARD DATA — 630 cards
+// ═══════════════════════════════════════════════════════════════
+const RARITIES = {
+  common:   { label: 'Common',         color: '#8899AA', dot: '#8899AA',  order: 1 },
+  rare:     { label: 'Rare',           color: '#6495ED', dot: '#6495ED',  order: 2 },
+  ultra:    { label: 'Ultra Rare',     color: '#DA70D6', dot: '#DA70D6',  order: 3 },
+  momentum: { label: 'Momentum',       color: '#FF6347', dot: '#FF6347',  order: 4 },
+  le:       { label: 'Limited Edition',color: '#F4C430', dot: '#F4C430',  order: 5 },
+};
+
+const CATEGORIES = {
+  'base':       { label: 'Base Cards',       icon: '⚽', rarity: 'common', color: '#8899AA' },
+  'team-crest': { label: 'Team Crests',      icon: '🛡️', rarity: 'rare',   color: '#6495ED' },
+  'mascot':     { label: 'Mascots',          icon: '🎭', rarity: 'rare',   color: '#6495ED' },
+  'contender':  { label: 'Contenders',       icon: '🎯', rarity: 'rare',   color: '#6495ED' },
+  'def-rock':   { label: 'Defensive Rocks',  icon: '🗿', rarity: 'ultra',  color: '#DA70D6' },
+  'fan-fav':    { label: 'Fan Favourites',   icon: '⭐', rarity: 'ultra',  color: '#DA70D6' },
+  'goal-mach':  { label: 'Goal Machines',    icon: '🎯', rarity: 'ultra',  color: '#DA70D6' },
+  'icon':       { label: 'Icons',            icon: '👑', rarity: 'ultra',  color: '#DA70D6' },
+  'rookies':    { label: 'Master Rookies',   icon: '🌟', rarity: 'rare',   color: '#6495ED' },
+  'midfield':   { label: 'Midfield Maestros',icon: '🎼', rarity: 'ultra',  color: '#DA70D6' },
+  'keeper':     { label: 'Team Keepers',     icon: '🧤', rarity: 'rare',   color: '#6495ED' },
+};
+
+// ── Team data with flags and players (417 total players + 48 crests = 465) ──
+// 33 teams × 9 players + 15 teams × 8 players = 417
+const TEAMS_DATA = [
+  { name:'Algeria',     flag:'🇩🇿', conf:'CAF',      players:['Rais M\'Bolhi','Aissa Mandi','Ramy Bensebaini','Saïd Benrahma','Youcef Atal','Ismaël Bennacer','Andy Delort','Sofiane Feghouli'] }, // 8
+  { name:'Argentina',   flag:'🇦🇷', conf:'CONMEBOL', players:['Emiliano Martínez','Marcos Acuña','Rodrigo De Paul','Nicolás Otamendi','Cristian Romero','Lautaro Martínez','Julián Álvarez','Alexis Mac Allister','Lionel Messi'] }, // 9
+  { name:'Australia',   flag:'🇦🇺', conf:'AFC',      players:['Mat Ryan','Aziz Behich','Harry Souttar','Mitchell Duke','Aaron Mooy','Jackson Irvine','Mat Leckie','Martin Boyle','Craig Goodwin'] }, // 9
+  { name:'Austria',     flag:'🇦🇹', conf:'UEFA',     players:['Patrick Pentz','David Alaba','Florian Grillitsch','Marko Arnautovic','Marcel Sabitzer','Konrad Laimer','Christoph Baumgartner','Andreas Weimann'] }, // 8
+  { name:'Belgium',     flag:'🇧🇪', conf:'UEFA',     players:['Thibaut Courtois','Kevin De Bruyne','Romelu Lukaku','Youri Tielemans','Timothy Castagne','Jan Vertonghen','Leandro Trossard','Charles De Ketelaere','Amadou Onana'] }, // 9
+  { name:'Bosnia and Herzegovina',flag:'🇧🇦',conf:'UEFA',players:['Nikola Vasilj','Anel Ahmedhodzic','Edin Džeko','Benjamin Tahirović','Amar Dedić','Sead Kolašinac','Dario Šarić','Ermedin Demirović'] }, // 8
+  { name:'Brazil',      flag:'🇧🇷', conf:'CONMEBOL', players:['Alisson','Marquinhos','Thiago Silva','Vinicius Jr','Rodrygo','Lucas Paquetá','Casemiro','Raphinha','Richarlison'] }, // 9
+  { name:'Cabo Verde',  flag:'🇨🇻', conf:'CAF',      players:['Vozinha','Stopira','Diogo Gonçalves','Ryan Mendes','Patrick Andrade','Steven Fortes','Garry Rodrigues','Willy Semedo'] }, // 8
+  { name:'Canada',      flag:'🇨🇦', conf:'CONCACAF', players:['Milan Borjan','Alphonso Davies','Jonathan David','Cyle Larin','Tajon Buchanan','Jonathan Osorio','Stephen Eustáquio','Richie Laryea','Ismaël Koné'] }, // 9
+  { name:'Colombia',    flag:'🇨🇴', conf:'CONMEBOL', players:['David Ospina','James Rodríguez','Luis Díaz','Davinson Sánchez','Yerry Mina','Duván Zapata','Wilmar Barrios','Rafael Santos Borré','Richard Ríos'] }, // 9
+  { name:'Congo DR',    flag:'🇨🇩', conf:'CAF',      players:['Lionel Mpasi','Arthur Masuaku','Chancel Mbemba','Yannick Bolasie','Neeskens Kebano','Cédric Bakambu','Silas Wissa','Théo Bongonda'] }, // 8
+  { name:"Côte d'Ivoire", flag:'🇨🇮', conf:'CAF',   players:['Yahia Fofana','Serge Aurier','Willy Boly','Sébastien Haller','Nicolas Pépé','Frank Kessié','Emmanuel Gradel','Wilfried Zaha'] }, // 8
+  { name:'Croatia',     flag:'🇭🇷', conf:'UEFA',     players:['Dominik Livaković','Joško Gvardiol','Luka Modrić','Ivan Perišić','Mateo Kovačić','Mario Pašalić','Bruno Petković','Nikola Vlašić','Andrej Kramarić'] }, // 9
+  { name:'Curaçao',     flag:'🇨🇼', conf:'CONCACAF', players:['Eloy Room','Leandro Bacuna','Cuco Martina','Riechedly Bazoer','Juninho','Elson Hooi','Hedwiges Maduro','Rangelo Janga'] }, // 8
+  { name:'Czechia',     flag:'🇨🇿', conf:'UEFA',     players:['Jiří Staněk','Vladimír Coufal','Tomáš Souček','Patrik Schick','Ondřej Duda','Antonín Barák','Lukáš Provod','Adam Hložek'] }, // 8
+  { name:'Ecuador',     flag:'🇪🇨', conf:'CONMEBOL', players:['Hernán Galíndez','Pervis Estupiñán','Piero Hincapié','Moisés Caicedo','Carlos Gruezo','Enner Valencia','Michael Estrada','Kendry Páez','Jeremy Sarmiento'] }, // 9
+  { name:'Egypt',       flag:'🇪🇬', conf:'CAF',      players:['Mohamed El-Shenawy','Ahmed Hegazi','Mohamed Elneny','Mohamed Salah','Trezeguet','Mostafa Mohamed','Omar Marmoush','Amr El-Sulaya','Marwan Attia'] }, // 9
+  { name:'England',     flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', conf:'UEFA',  players:['Jordan Pickford','Jude Bellingham','Harry Kane','Phil Foden','Bukayo Saka','Declan Rice','Trent Alexander-Arnold','Kyle Walker','Cole Palmer'] }, // 9
+  { name:'France',      flag:'🇫🇷', conf:'UEFA',     players:['Mike Maignan','Kylian Mbappé','Antoine Griezmann','Ousmane Dembélé','Raphaël Varane','Aurélien Tchouaméni','Théo Hernandez','Eduardo Camavinga','Warren Zaïre-Emery'] }, // 9
+  { name:'Germany',     flag:'🇩🇪', conf:'UEFA',     players:['Manuel Neuer','Thomas Müller','Kai Havertz','Leroy Sané','Jamal Musiala','Joshua Kimmich','Antonio Rüdiger','Florian Wirtz','İlkay Gündoğan'] }, // 9
+  { name:'Ghana',       flag:'🇬🇭', conf:'CAF',      players:['Lawrence Ati-Zigi','Jordan Ayew','André Ayew','Thomas Partey','Iñaki Williams','Mohammed Kudus','Antoine Semenyo','Ernest Nuamah','Nico Williams'] }, // 9
+  { name:'Haiti',       flag:'🇭🇹', conf:'CONCACAF', players:['Josué Duverger','Mechack Jérôme','Wilde Donald Guerrier','Steeven Saba','Frantzdy Pierrot','Naica Raymonvil','Duckens Nazon','Derrick Etienne'] }, // 8
+  { name:'IR Iran',     flag:'🇮🇷', conf:'AFC',      players:['Alireza Beiranvand','Mehdi Taremi','Sardar Azmoun','Alireza Jahanbakhsh','Morteza Pouraliganji','Saman Ghoddos','Ali Gholizadeh','Ramin Rezaeian','Karim Ansarifard'] }, // 9
+  { name:'Iraq',        flag:'🇮🇶', conf:'AFC',      players:['Jalal Hachim','Bashar Rasan','Ali Adnan','Dhurgham Ismail','Aymen Hussein','Amjad Attwan','Humam Tariq','Ali Jasim','Safaa Hadi'] }, // 9
+  { name:'Japan',       flag:'🇯🇵', conf:'AFC',      players:['Shuichi Gonda','Takefusa Kubo','Kaoru Mitoma','Wataru Endō','Maya Yoshida','Ko Itakura','Daichi Kamada','Junya Ito','Ritsu Dōan'] }, // 9
+  { name:'Jordan',      flag:'🇯🇴', conf:'AFC',      players:['Yazeed Abo Layla','Musa Tamari','Besar Halimi','Ahmad Harbi','Salem Al-Ajalin','Yazan Al-Naimat','Mahmoud Al-Mardi','Ahmad Saleh'] }, // 8
+  { name:'Korea Republic',flag:'🇰🇷',conf:'AFC',    players:['Kim Seung-gyu','Son Heung-min','Kim Min-jae','Lee Kang-in','Hwang Hee-chan','Hwang In-beom','Jung Woo-young','Na Sang-ho','Oh Se-hun'] }, // 9
+  { name:'Mexico',      flag:'🇲🇽', conf:'CONCACAF', players:['Guillermo Ochoa','Hirving Lozano','Raúl Jiménez','Edson Álvarez','César Montes','Orbelín Pineda','Roberto Alvarado','Santiago Giménez','Kevin Álvarez'] }, // 9
+  { name:'Morocco',     flag:'🇲🇦', conf:'CAF',      players:['Yassine Bounou','Achraf Hakimi','Romain Saïss','Sofyan Amrabat','Hakim Ziyech','Youssef En-Nesyri','Sofiane Boufal','Azzedine Ounahi','Jawad El Yamiq'] }, // 9
+  { name:'Netherlands', flag:'🇳🇱', conf:'UEFA',     players:['Bart Verbruggen','Virgil van Dijk','Frenkie de Jong','Cody Gakpo','Denzel Dumfries','Nathan Aké','Xavi Simons','Tijjani Reijnders','Jeremie Frimpong'] }, // 9
+  { name:'New Zealand', flag:'🇳🇿', conf:'OFC',      players:['Joe Bell','Chris Wood','Liberato Cacace','Winston Reid','Sarpreet Singh','Matthew Garbett','Elijah Just','Ben Old'] }, // 8
+  { name:'Norway',      flag:'🇳🇴', conf:'UEFA',     players:['Ørjan Nyland','Erling Haaland','Martin Ødegaard','Alexander Sørloth','Sander Berge','Fredrik Aursnes','Leo Østigård','Kristian Thorstvedt'] }, // 8
+  { name:'Panama',      flag:'🇵🇦', conf:'CONCACAF', players:['Luis Mejía','Janer Quesada','Harold Cummings','Aníbal Godoy','Freddy Gondola','Ismael Díaz','José Fajardo','Rolando Blackburn','Édgar Bárcenas'] }, // 9
+  { name:'Paraguay',    flag:'🇵🇾', conf:'CONMEBOL', players:['Antony Silva','Gustavo Gómez','Carlos González','Óscar Romero','Ángel Romero','Miguel Almirón','Diego Gómez','Julio Enciso','Matías Rojas'] }, // 9
+  { name:'Portugal',    flag:'🇵🇹', conf:'UEFA',     players:['Diogo Costa','Cristiano Ronaldo','Bernardo Silva','Bruno Fernandes','João Cancelo','Rúben Dias','Nuno Mendes','Vitinha','Rafael Leão'] }, // 9
+  { name:'Qatar',       flag:'🇶🇦', conf:'AFC',      players:['Meshaal Barsham','Pedro Miguel','Bassam Al-Rawi','Assim Madibo','Hassan Al-Haydos','Akram Afif','Almoez Ali','Abdelkarim Hassan','Karim Boudiaf'] }, // 9
+  { name:'Saudi Arabia',flag:'🇸🇦', conf:'AFC',      players:['Mohammed Al-Owais','Salem Al-Dawsari','Mohammed Al-Burayk','Ali Al-Bulayhi','Firas Al-Buraikan','Sultan Al-Ghannam','Saleh Al-Shehri','Nasser Al-Dawsari'] }, // 8
+  { name:'Scotland',    flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿', conf:'UEFA',  players:['Angus Gunn','Andrew Robertson','Scott McTominay','Lyndon Dykes','Stuart Armstrong','John McGinn','Kenny McLean','Lawrence Shankland','Che Adams'] }, // 9
+  { name:'Senegal',     flag:'🇸🇳', conf:'CAF',      players:['Édouard Mendy','Sadio Mané','Kalidou Koulibaly','Idrissa Gueye','Pape Matar Sarr','Ismaïla Sarr','Habib Diallo','Boulaye Dia','Lamine Camara'] }, // 9
+  { name:'South Africa',flag:'🇿🇦', conf:'CAF',      players:['Ronwen Williams','Percy Tau','Themba Zwane','Yusuf Maart','Rushine De Reuck','Grant Kekana','Lyle Foster','Teboho Mokoena','Evidence Makgopa'] }, // 9
+  { name:'Spain',       flag:'🇪🇸', conf:'UEFA',     players:['David de Gea','Jordi Alba','Sergio Ramos','Rodri','Pedri','Gavi','Álvaro Morata','Ansu Fati','Ferran Torres','Nico Williams','Lamine Yamal'] }, // 11
+  { name:'Sweden',      flag:'🇸🇪', conf:'UEFA',     players:['Robin Olsen','Dejan Kulusevski','Alexander Isak','Emil Forsberg','Viktor Claesson','Mattias Svanberg','Robin Quaison','Alexander Milosevic'] }, // 8
+  { name:'Switzerland', flag:'🇨🇭', conf:'UEFA',     players:['Yann Sommer','Granit Xhaka','Xherdan Shaqiri','Denis Zakaria','Ricardo Rodriguez','Manuel Akanji','Breel Embolo','Ruben Vargas'] }, // 8
+  { name:'Tunisia',     flag:'🇹🇳', conf:'CAF',      players:['Aymen Dahmen','Montassar Talbi','Dylan Bronn','Ferjani Sassi','Anis Ben Slimane','Youssef Msakni','Wahbi Khazri','Seifeddine Jaziri'] }, // 8
+  { name:'Türkiye',     flag:'🇹🇷', conf:'UEFA',     players:['Uğurcan Çakır','Merih Demiral','Çağlar Söyüncü','Hakan Çalhanoğlu','Cengiz Ünder','Kenan Yıldız','Arda Güler','Kaan Ayhan','Orkun Kökçü'] }, // 9
+  { name:'Uruguay',     flag:'🇺🇾', conf:'CONMEBOL', players:['Fernando Muslera','Diego Godín','José María Giménez','Luis Suárez','Federico Valverde','Darwin Núñez','Rodrigo Bentancur','Ronald Araújo','Facundo Pellistri'] }, // 9
+  { name:'USA',         flag:'🇺🇸', conf:'CONCACAF', players:['Matt Turner','Christian Pulisic','Gio Reyna','Tyler Adams','Weston McKennie','Josh Sargent','Brenden Aaronson','Tim Weah','Yunus Musah'] }, // 9
+  { name:'Uzbekistan',  flag:'🇺🇿', conf:'AFC',      players:['Eldor Shomurodov','Jaloliddin Masharipov','Sherzod Nishonov','Abbosbek Fayzullaev','Otabek Shukurov','Jamshid Iskanderov','Husan Kholmatov','Bobur Abdixoliqov'] }, // 8
+];
+
+// Special category players
+const SPECIAL_CARDS = {
+  mascot:    [['Maple','WC 2026'],['Clutch','WC 2026'],['Zayu','WC 2026']],
+  contender: [
+    ['Team A1','Contender'],['Team A2','Contender'],['Team B1','Contender'],['Team B2','Contender'],
+    ['Team C1','Contender'],['Team C2','Contender'],['Team D1','Contender'],['Team D2','Contender'],
+    ['Team E1','Contender'],['Team E2','Contender'],['Team F1','Contender'],['Team F2','Contender'],
+    ['Team G1','Contender'],['Team G2','Contender'],['Team H1','Contender'],['Team H2','Contender'],
+    ['Team I1','Contender'],['Team I2','Contender'],['Team J1','Contender'],['Team J2','Contender'],
+    ['Team K1','Contender'],['Team K2','Contender'],['Team L1','Contender'],['Team L2','Contender'],
+    ['Team M1','Contender'],['Team M2','Contender'],['Team N1','Contender'],['Team N2','Contender'],
+    ['Team O1','Contender'],['Team O2','Contender'],['Team P1','Contender'],['Team P2','Contender'],
+    ['Team Q1','Contender'],['Team Q2','Contender'],['Team R1','Contender'],['Team R2','Contender'],
+  ],
+  'def-rock':  [['Virgil van Dijk','Netherlands'],['Rúben Dias','Portugal'],['Antonio Rüdiger','Germany'],['Marquinhos','Brazil'],['Nicolás Otamendi','Argentina'],['Kalidou Koulibaly','Senegal'],['Cristian Romero','Argentina'],['Kim Min-jae','Korea Republic'],['Éder Militão','Brazil'],['Raphaël Varane','France'],['Harry Maguire','England'],['Achraf Hakimi','Morocco'],['Joško Gvardiol','Croatia'],['William Saliba','England'],['Romain Saïss','Morocco'],['Gustavo Gómez','Paraguay'],['Aissa Mandi','Algeria'],['Ramy Bensebaini','Algeria']],
+  'fan-fav':   [['Erling Haaland','Norway'],['Kylian Mbappé','France'],['Lionel Messi','Argentina'],['Cristiano Ronaldo','Portugal'],['Neymar Jr','Brazil'],['Mohammed Salah','Egypt'],['Son Heung-min','Korea Republic'],['Sadio Mané','Senegal'],['Romelu Lukaku','Belgium'],['Harry Kane','England'],['Robert Lewandowski','Poland'],['Lamine Yamal','Spain'],['Vinicius Jr','Brazil'],['Jude Bellingham','England'],['Kevin De Bruyne','Belgium'],['Martin Ødegaard','Norway'],['Pedri','Spain'],['Takefusa Kubo','Japan']],
+  'goal-mach': [['Erling Haaland','Norway'],['Kylian Mbappé','France'],['Lautaro Martínez','Argentina'],['Harry Kane','England'],['Romelu Lukaku','Belgium'],['Darwin Núñez','Uruguay'],['Santiago Giménez','Mexico'],['Cody Gakpo','Netherlands'],['Gonçalo Ramos','Portugal'],['Jonathan David','Canada'],['Richarlison','Brazil'],['Álvaro Morata','Spain'],['Mehdi Taremi','IR Iran'],['Aymen Hussein','Iraq'],['Youssef En-Nesyri','Morocco'],['Lassi Isak','Sweden'],['Sébastien Haller',"Côte d'Ivoire"],['Duván Zapata','Colombia']],
+  'icon':      [['Lionel Messi','Argentina'],['Cristiano Ronaldo','Portugal'],['Luka Modrić','Croatia'],['Luis Suárez','Uruguay'],['Thomas Müller','Germany'],['Antoine Griezmann','France'],['Thiago Silva','Brazil'],['Keylor Navas','Costa Rica'],['Neymar Jr','Brazil'],['Paul Pogba','France'],['Gareth Bale','Wales'],['Xherdan Shaqiri','Switzerland'],['Kevin De Bruyne','Belgium'],['Manuel Neuer','Germany'],['Thibaut Courtois','Belgium'],['Diego Godín','Uruguay'],['Dani Carvajal','Spain'],['Iker Casillas','Spain']],
+  'rookies':   [['Lamine Yamal','Spain'],['Warren Zaïre-Emery','France'],['Arda Güler','Türkiye'],['Florentino Luís','Portugal'],['Kobbie Mainoo','England'],['Jamal Musiala','Germany'],['Eduardo Camavinga','France'],['Savinho','Brazil'],['Endrick','Brazil'],['Kendry Páez','Ecuador'],['Pedri','Spain'],['Gavi','Spain'],['Bradley Barcola','France'],['Kenan Yıldız','Türkiye'],['Lamine Camara','Senegal'],['Xavi Simons','Netherlands'],['Cole Palmer','England'],['Folarin Balogun','USA']],
+  'midfield':  [['Kevin De Bruyne','Belgium'],['Luka Modrić','Croatia'],['Rodri','Spain'],['Alexis Mac Allister','Argentina'],['Frenkie de Jong','Netherlands'],['Joshua Kimmich','Germany'],['Casemiro','Brazil'],['Declan Rice','England'],['Aurélien Tchouaméni','France'],['Sofyan Amrabat','Morocco'],['Jude Bellingham','England'],['Pedri','Spain'],['Wataru Endō','Japan'],['Federico Valverde','Uruguay'],['Granit Xhaka','Switzerland'],['İlkay Gündoğan','Germany'],['Idrissa Gueye','Senegal'],['James Rodríguez','Colombia']],
+  'keeper':    [['Emiliano Martínez','Argentina'],['Thibaut Courtois','Belgium'],['Alisson','Brazil'],['Manuel Neuer','Germany'],['Jordan Pickford','England'],['Mike Maignan','France'],['Yann Sommer','Switzerland'],['Dominik Livaković','Croatia'],['Gianluigi Donnarumma','Italy'],['Édouard Mendy','Senegal'],['Yassine Bounou','Morocco'],['Kim Seung-gyu','Korea Republic'],['Shuichi Gonda','Japan'],['Mohammed Al-Owais','Saudi Arabia'],['Mat Ryan','Australia'],['Bart Verbruggen','Netherlands'],['Ørjan Nyland','Norway'],['Diogo Costa','Portugal']],
+};
+
+// ── Build the 630-card array ──
+function buildCards() {
+  const cards = [];
+  let id = 1;
+
+  // 1. Team sections (crests + players) alphabetically
+  for (const t of TEAMS_DATA) {
+    cards.push({ id: id++, name: t.name + ' Crest', team: t.name, flag: t.flag, category: 'team-crest', rarity: 'rare' });
+    for (const p of t.players) {
+      cards.push({ id: id++, name: p, team: t.name, flag: t.flag, category: 'base', rarity: 'common' });
+    }
+  }
+
+  // 2. Mascots (3)
+  for (const [name, team] of SPECIAL_CARDS.mascot) {
+    cards.push({ id: id++, name, team, flag: '🏆', category: 'mascot', rarity: 'rare' });
+  }
+
+  // 3. Contenders (36)
+  for (const [name, team] of SPECIAL_CARDS.contender) {
+    cards.push({ id: id++, name, team, flag: '🌐', category: 'contender', rarity: 'rare' });
+  }
+
+  // 4. Special categories (18 each = 126)
+  const specialOrder = ['def-rock','fan-fav','goal-mach','icon','rookies','midfield','keeper'];
+  for (const cat of specialOrder) {
+    for (const [name, team] of SPECIAL_CARDS[cat]) {
+      const teamData = TEAMS_DATA.find(t => t.name === team);
+      cards.push({ id: id++, name, team, flag: teamData ? teamData.flag : '🌐', category: cat, rarity: CATEGORIES[cat].rarity });
+    }
+  }
+
+  return cards;
+}
+
+const ALL_CARDS = buildCards();
+const TOTAL = 630;
+
+// ── State ──
+let owned = new Set(JSON.parse(localStorage.getItem('wc2026_owned') || '[]'));
+let recentAdds = JSON.parse(localStorage.getItem('wc2026_recent') || '[]');
+
+function saveOwned() {
+  localStorage.setItem('wc2026_owned', JSON.stringify([...owned]));
+}
+function saveRecent() {
+  localStorage.setItem('wc2026_recent', JSON.stringify(recentAdds));
+}
+
+// ── Collection filter state ──
+let activeFilter = 'all';
+let searchQuery = '';
+
+// ── Helpers ──
+function pct(n, d) { return d === 0 ? 0 : Math.round(n / d * 100); }
+
+function getStats() {
+  const byRarity = {};
+  const byCat = {};
+  const byTeam = {};
+
+  for (const c of ALL_CARDS) {
+    if (!byRarity[c.rarity]) byRarity[c.rarity] = { total: 0, owned: 0 };
+    byRarity[c.rarity].total++;
+    if (owned.has(c.id)) byRarity[c.rarity].owned++;
+
+    if (!byCat[c.category]) byCat[c.category] = { total: 0, owned: 0 };
+    byCat[c.category].total++;
+    if (owned.has(c.id)) byCat[c.category].owned++;
+
+    const key = c.team;
+    if (!byTeam[key]) byTeam[key] = { total: 0, owned: 0, flag: c.flag };
+    byTeam[key].total++;
+    if (owned.has(c.id)) byTeam[key].owned++;
+  }
+
+  return { byRarity, byCat, byTeam };
+}
+
+// ── UI Updates ──
+function updateHeader() {
+  const n = owned.size;
+  const p = pct(n, TOTAL);
+  document.getElementById('hdr-owned').textContent = n;
+  document.getElementById('hdr-bar').style.width = p + '%';
+}
+
+function renderDashboard() {
+  const n = owned.size;
+  const p = pct(n, TOTAL);
+  const stats = getStats();
+
+  document.getElementById('s-owned').textContent = n;
+  document.getElementById('s-missing').textContent = TOTAL - n;
+  document.getElementById('s-owned-pct').textContent = p + '% complete';
+  document.getElementById('sb-owned').style.width = p + '%';
+  document.getElementById('sb-missing').style.width = pct(TOTAL - n, TOTAL) + '%';
+
+  // Rarity breakdown
+  const rl = document.getElementById('rarity-list');
+  rl.innerHTML = '';
+  for (const [key, r] of Object.entries(RARITIES)) {
+    const rd = stats.byRarity[key] || { total: 0, owned: 0 };
+    const rp = pct(rd.owned, rd.total);
+    rl.innerHTML += `
+      <div class="rarity-row">
+        <div class="rarity-dot" style="background:${r.color}"></div>
+        <div class="rarity-info">
+          <div class="rarity-name">${r.label}</div>
+          <div class="rarity-nums">${rd.owned} / ${rd.total}</div>
+        </div>
+        <div class="rarity-pct">${rp}%</div>
+      </div>`;
+  }
+
+  // Category summary (top 6 by total)
+  const csl = document.getElementById('category-summary-list');
+  csl.innerHTML = '';
+  const catEntries = Object.entries(stats.byCat).sort((a,b) => b[1].total - a[1].total).slice(0,6);
+  for (const [catKey, cd] of catEntries) {
+    const cat = CATEGORIES[catKey] || { label: catKey, icon: '📋', color: '#888' };
+    const cp = pct(cd.owned, cd.total);
+    csl.innerHTML += `
+      <div class="rarity-row">
+        <div class="rarity-dot" style="background:${cat.color}"></div>
+        <div class="rarity-info">
+          <div class="rarity-name">${cat.icon} ${cat.label}</div>
+          <div class="rarity-nums">${cd.owned} / ${cd.total}</div>
+        </div>
+        <div class="rarity-pct">${cp}%</div>
+      </div>`;
+  }
+
+  // Team grid
+  const tg = document.getElementById('team-grid');
+  tg.innerHTML = '';
+  const teamEntries = TEAMS_DATA.map(t => ({
+    name: t.name, flag: t.flag,
+    ...(stats.byTeam[t.name] || { total: 0, owned: 0 })
+  }));
+  for (const t of teamEntries) {
+    const tp = pct(t.owned, t.total);
+    tg.innerHTML += `
+      <div class="team-card">
+        <div class="team-card-flag">${t.flag}</div>
+        <div class="team-card-name">${t.name}</div>
+        <div class="team-card-pct">${t.owned}/${t.total} · ${tp}%</div>
+        <div class="team-card-bar"><div class="team-card-fill" style="width:${tp}%"></div></div>
+      </div>`;
+  }
+}
+
+// ── Collection Rendering ──
+let FILTER_OPTIONS = [];
+function buildFilterOptions() {
+  FILTER_OPTIONS = [
+    { key: 'all', label: 'All' },
+    { key: 'missing', label: 'Missing' },
+    { key: 'owned', label: 'Owned' },
+    ...Object.entries(CATEGORIES).map(([k,v]) => ({ key: 'cat:'+k, label: v.icon+' '+v.label })),
+    ...TEAMS_DATA.map(t => ({ key: 'team:'+t.name, label: t.flag+' '+t.name })),
+  ];
+}
+
+function renderFilterChips() {
+  const el = document.getElementById('filter-chips');
+  el.innerHTML = FILTER_OPTIONS.slice(0, 40).map(f =>
+    `<div class="filter-chip ${activeFilter === f.key ? 'active' : ''}" onclick="setFilter('${f.key}')">${f.label}</div>`
+  ).join('');
+}
+
+function setFilter(key) {
+  activeFilter = key;
+  renderFilterChips();
+  renderCollection();
+}
+
+function filterCards() {
+  searchQuery = document.getElementById('search-input').value.toLowerCase();
+  renderCollection();
+}
+
+function getFilteredCards() {
+  return ALL_CARDS.filter(c => {
+    if (activeFilter === 'owned' && !owned.has(c.id)) return false;
+    if (activeFilter === 'missing' && owned.has(c.id)) return false;
+    if (activeFilter.startsWith('cat:') && c.category !== activeFilter.slice(4)) return false;
+    if (activeFilter.startsWith('team:') && c.team !== activeFilter.slice(5)) return false;
+    if (searchQuery) {
+      const q = searchQuery;
+      if (!c.name.toLowerCase().includes(q) && !c.team.toLowerCase().includes(q) && !String(c.id).includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function renderCollection() {
+  const cards = getFilteredCards();
+  const list = document.getElementById('coll-list');
+
+  if (!cards.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">No cards found</div></div>';
+    return;
+  }
+
+  // Group by team if not filtering by specific team
+  const grouped = {};
+  for (const c of cards) {
+    const group = c.team;
+    if (!grouped[group]) grouped[group] = [];
+    grouped[group].push(c);
+  }
+
+  let html = '';
+  for (const [group, groupCards] of Object.entries(grouped)) {
+    const teamData = TEAMS_DATA.find(t => t.name === group);
+    const flag = groupCards[0].flag;
+    const groupOwned = groupCards.filter(c => owned.has(c.id)).length;
+    html += `<div class="group-header">
+      <span class="group-flag">${flag}</span>
+      <span class="group-name">${group}</span>
+      <span class="group-count">${groupOwned}/${groupCards.length}</span>
+    </div>
+    <div class="cards-grid">`;
+    for (const c of groupCards) {
+      const isOwned = owned.has(c.id);
+      const cat = CATEGORIES[c.category] || { rarity: c.rarity };
+      const badgeClass = `badge-${cat.rarity === 'common' ? 'common' : cat.rarity === 'rare' ? 'rare' : cat.rarity === 'ultra' ? 'ultra' : 'le'}`;
+      const catLabel = CATEGORIES[c.category] ? CATEGORIES[c.category].label : c.category;
+      html += `<div class="card-item ${isOwned ? 'owned' : ''}" onclick="openModal(${c.id})">
+        <div class="card-num">#${c.id}</div>
+        <div class="card-name">${c.name}</div>
+        <div class="card-badge ${badgeClass}">${catLabel.split(' ')[0]}</div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+// ── Modal ──
+let modalCardId = null;
+function openModal(cardId) {
+  const card = ALL_CARDS.find(c => c.id === cardId);
+  if (!card) return;
+  modalCardId = cardId;
+
+  const cat = CATEGORIES[card.category] || {};
+  const rar = RARITIES[card.rarity] || {};
+
+  document.getElementById('modal-num').textContent = `#${card.id}`;
+  document.getElementById('modal-name').textContent = `${card.flag} ${card.name}`;
+  document.getElementById('modal-team').textContent = card.team + (cat.label ? ' · ' + cat.label : '');
+  const rm = document.getElementById('modal-rarity');
+  rm.textContent = rar.label || card.rarity;
+  rm.style.background = (rar.color || '#888') + '22';
+  rm.style.color = rar.color || '#888';
+  rm.style.border = `1px solid ${rar.color || '#888'}44`;
+
+  const isOwned = owned.has(cardId);
+  document.getElementById('modal-actions').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Close</button>
+    ${isOwned
+      ? `<button class="btn-remove" onclick="toggleCard(${cardId}, false)">Remove</button>`
+      : `<button class="btn-add" onclick="toggleCard(${cardId}, true)">Add to Collection ✓</button>`}
+  `;
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+  modalCardId = null;
+}
+
+function toggleCard(cardId, add) {
+  const card = ALL_CARDS.find(c => c.id === cardId);
+  if (!card) return;
+
+  if (add) {
+    owned.add(cardId);
+    recentAdds = [cardId, ...recentAdds.filter(x => x !== cardId)].slice(0, 10);
+    saveRecent();
+    showToast(`✓ #${cardId} ${card.name} added!`, 'success');
+  } else {
+    owned.delete(cardId);
+    showToast(`Removed #${cardId} ${card.name}`, 'info');
+  }
+  saveOwned();
+  updateHeader();
+  renderDashboard();
+  renderCollection();
+  renderStats();
+  renderRecentAdds();
+  closeModal();
+}
+
+// ── Manual add ──
+function addManual() {
+  const input = document.getElementById('manual-num');
+  const num = parseInt(input.value);
+  if (!num || num < 1 || num > TOTAL) {
+    showToast('Enter a valid card number (1–630)', 'error');
+    return;
+  }
+  input.value = '';
+  openModal(num);
+}
+
+document.getElementById('manual-num').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addManual();
+});
+
+// ── Scanner ──
+let html5QrCode = null;
+let scannerActive = false;
+
+function startScanner() {
+  if (scannerActive) return;
+  if (!window.Html5Qrcode) { showToast('QR library loading…', 'info'); return; }
+
+  html5QrCode = new Html5Qrcode('reader');
+  html5QrCode.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 220, height: 220 } },
+    onScanSuccess,
+    () => {}
+  ).then(() => {
+    scannerActive = true;
+    document.getElementById('scanner-status').innerHTML = `
+      <div class="scanner-status-icon">🟢</div>
+      <div class="scanner-status-text">Scanner Active</div>
+      <div class="scanner-status-sub">Point camera at any QR code</div>`;
+  }).catch(err => {
+    document.getElementById('scanner-status').innerHTML = `
+      <div class="scanner-status-icon">❌</div>
+      <div class="scanner-status-text">Camera not available</div>
+      <div class="scanner-status-sub">Use manual entry below</div>`;
+  });
+}
+
+function stopScanner() {
+  if (html5QrCode && scannerActive) {
+    html5QrCode.stop().then(() => { scannerActive = false; }).catch(() => {});
+  }
+}
+
+function onScanSuccess(decodedText) {
+  // Extract numbers from QR text
+  const nums = decodedText.match(/\d+/g);
+  if (!nums) { showToast('QR code read — no card number found. Use manual entry.', 'info'); return; }
+
+  // Find a number in 1-630 range
+  const cardNum = nums.map(Number).find(n => n >= 1 && n <= TOTAL);
+  if (!cardNum) { showToast('QR read but no valid card # found. Try manual entry.', 'info'); return; }
+
+  if (owned.has(cardNum)) {
+    showToast(`#${cardNum} already in your collection`, 'info');
+    return;
+  }
+
+  openModal(cardNum);
+}
+
+// ── Recent adds ──
+function renderRecentAdds() {
+  const box = document.getElementById('recent-adds-box');
+  const list = document.getElementById('recent-list');
+  if (!recentAdds.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  list.innerHTML = recentAdds.slice(0, 8).map(id => {
+    const c = ALL_CARDS.find(x => x.id === id);
+    if (!c) return '';
+    return `<div class="recent-item">
+      <span class="recent-num">#${c.id}</span>
+      <span class="recent-name">${c.name}</span>
+      <span class="recent-team">${c.flag} ${c.team}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Stats Screen ──
+function renderStats() {
+  const n = owned.size;
+  const p = pct(n, TOTAL);
+  const stats = getStats();
+
+  // Ring
+  const circumference = 2 * Math.PI * 68;
+  const offset = circumference - (p / 100) * circumference;
+  document.getElementById('ring-circle').style.strokeDashoffset = offset;
+  document.getElementById('ring-circle').setAttribute('stroke-dasharray', `${circumference} ${circumference}`);
+  document.getElementById('ring-pct').textContent = p + '%';
+
+  // Rarity
+  const srl = document.getElementById('stats-rarity-list');
+  srl.innerHTML = '';
+  for (const [key, r] of Object.entries(RARITIES)) {
+    const rd = stats.byRarity[key] || { total: 0, owned: 0 };
+    const rp = pct(rd.owned, rd.total);
+    srl.innerHTML += `
+      <div class="rarity-row">
+        <div class="rarity-dot" style="background:${r.color}"></div>
+        <div class="rarity-info">
+          <div class="rarity-name">${r.label}</div>
+          <div class="rarity-nums">${rd.owned} / ${rd.total}</div>
+        </div>
+        <div class="rarity-pct">${rp}%</div>
+      </div>`;
+  }
+
+  // Categories
+  const scl = document.getElementById('stats-cat-list');
+  scl.innerHTML = '';
+  for (const [catKey, cat] of Object.entries(CATEGORIES)) {
+    const cd = stats.byCat[catKey] || { total: 0, owned: 0 };
+    const cp = pct(cd.owned, cd.total);
+    scl.innerHTML += `
+      <div class="cat-row">
+        <div class="cat-top">
+          <div class="cat-name"><span class="cat-icon">${cat.icon}</span>${cat.label}</div>
+          <div class="cat-stat">${cd.owned}/${cd.total} · ${cp}%</div>
+        </div>
+        <div class="cat-bar"><div class="cat-bar-fill" style="width:${cp}%;background:${cat.color}"></div></div>
+      </div>`;
+  }
+
+  // Teams
+  const stl = document.getElementById('stats-team-list');
+  stl.innerHTML = '';
+  const teamsSorted = TEAMS_DATA.map(t => ({
+    ...t,
+    ...(stats.byTeam[t.name] || { total: 0, owned: 0 })
+  })).sort((a,b) => pct(b.owned,b.total) - pct(a.owned,a.total));
+
+  for (const t of teamsSorted) {
+    const tp = pct(t.owned, t.total);
+    stl.innerHTML += `
+      <div class="rarity-row">
+        <div style="font-size:18px">${t.flag}</div>
+        <div class="rarity-info">
+          <div class="rarity-name">${t.name}</div>
+          <div class="rarity-nums">${t.owned} / ${t.total}</div>
+        </div>
+        <div class="rarity-pct">${tp}%</div>
+      </div>`;
+  }
+}
+
+// ── Navigation ──
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+
+  if (name === 'scanner') {
+    startScanner();
+  } else {
+    stopScanner();
+  }
+
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'collection') renderCollection();
+  if (name === 'stats') renderStats();
+}
+
+// ── Toast ──
+let toastTimer = null;
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.classList.remove('show'); }, 2800);
+}
+
+// ── Init ──
+buildFilterOptions();
+renderFilterChips();
+updateHeader();
+renderDashboard();
+renderCollection();
+renderStats();
+renderRecentAdds();
+</script>
+</body>
+</html>
