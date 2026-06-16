@@ -140,7 +140,7 @@
       display: flex; flex-direction: column; padding: 6px 6px 7px;
       position: relative; transition: filter 0.25s, opacity 0.25s;
     }
-    /* NOT owned: preto e branco + opacidade bem fraca */
+    /* NOT owned: black & white + very low opacity */
     .card-item:not(.owned) .card-art {
       filter: grayscale(100%) brightness(0.55);
       opacity: 0.18;
@@ -395,8 +395,8 @@
       <div class="header-right">
         <div class="header-count">
           <div class="count-big"><span id="hdr-owned">0</span><span class="count-pct" id="hdr-pct">0%</span></div>
-          <div class="count-label">de 630 cartas</div>
-          <div class="count-dupes" id="hdr-dupes">🔁 0 repetidas</div>
+          <div class="count-label">of 630 cards</div>
+          <div class="count-dupes" id="hdr-dupes">🔁 0 duplicates</div>
         </div>
         <button class="logout-btn" id="logout-btn" onclick="doLogout()" title="Sair">Sair</button>
       </div>
@@ -466,11 +466,11 @@
         </div>
         <div class="scanner-status" id="scanner-status">
           <div class="scanner-status-icon">📷</div>
-          <div class="scanner-status-text">Aponte para o número da carta</div>
-          <div class="scanner-status-sub">A carta é reconhecida pelo número e adicionada sozinha</div>
+          <div class="scanner-status-text">Point at the card number</div>
+          <div class="scanner-status-sub">The card is recognized by its number and added automatically</div>
         </div>
         <div class="manual-add">
-          <div class="manual-title">Adicionar por número</div>
+          <div class="manual-title">Add by number</div>
           <div class="manual-row">
             <input class="manual-input" id="manual-num" type="number" min="1" max="630" placeholder="1 – 630" inputmode="numeric">
             <button class="btn-primary" onclick="addManual()">Add</button>
@@ -488,13 +488,13 @@
       <div class="dupes-pad">
         <div class="dupes-head">
           <div>
-            <div class="dupes-title">🔁 Repetidas</div>
-            <div class="dupes-summary" id="dupes-summary">Nenhuma repetida ainda</div>
+            <div class="dupes-title">🔁 Duplicates</div>
+            <div class="dupes-summary" id="dupes-summary">No duplicates yet</div>
           </div>
         </div>
         <div class="dupes-export-row">
-          <button class="btn-primary" id="dupes-copy-btn" onclick="copyDupes()">Copiar lista</button>
-          <button class="btn-secondary" id="dupes-csv-btn" onclick="exportDupesCsv()">Baixar CSV</button>
+          <button class="btn-primary" id="dupes-copy-btn" onclick="copyDupes()">Copy list</button>
+          <button class="btn-secondary" id="dupes-csv-btn" onclick="exportDupesCsv()">Download CSV</button>
         </div>
         <div id="dupes-list"></div>
       </div>
@@ -552,7 +552,7 @@
     </button>
     <button class="nav-btn" id="nav-dupes" onclick="switchScreen('dupes')">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-      <span class="nav-label">Repetidas</span>
+      <span class="nav-label">Duplicates</span>
     </button>
     <button class="nav-btn" id="nav-stats" onclick="switchScreen('stats')">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
@@ -581,7 +581,7 @@
       <div class="modal-rarity" id="modal-rarity"></div>
     </div>
     <div class="modal-dupes">
-      <span class="modal-dupes-label">🔁 Repetidas</span>
+      <span class="modal-dupes-label">🔁 Duplicates</span>
       <div class="dupes-stepper">
         <button class="dupes-btn" onclick="changeDupe(-1)" aria-label="menos">−</button>
         <span class="dupes-count" id="modal-dupes-count">0</span>
@@ -597,12 +597,12 @@
   <div class="auth-card">
     <div class="auth-badge">26</div>
     <div class="auth-title">Adrenalyn XL</div>
-    <div class="auth-sub">FIFA World Cup 2026™ · seu catálogo</div>
+    <div class="auth-sub">FIFA World Cup 2026™ · your catalog</div>
     <input class="auth-input" id="auth-email" type="email" placeholder="Email" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()">
-    <input class="auth-input" id="auth-pass" type="password" placeholder="Senha (mín. 6 caracteres)" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <input class="auth-input" id="auth-pass" type="password" placeholder="Password (min. 6 characters)" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     <div class="auth-error" id="auth-error"></div>
-    <button class="auth-btn primary" id="auth-login-btn" onclick="doLogin()">Entrar</button>
-    <button class="auth-btn" id="auth-signup-btn" onclick="doSignup()">Criar conta</button>
+    <button class="auth-btn primary" id="auth-login-btn" onclick="doLogin()">Log in</button>
+    <button class="auth-btn" id="auth-signup-btn" onclick="doSignup()">Create account</button>
   </div>
 </div>
 
@@ -1331,7 +1331,7 @@ function updateHeader(){
   document.getElementById('hdr-owned').textContent=n;
   document.getElementById('hdr-pct').textContent=p+'%';
   const totalDupes=Object.values(dupes).reduce((s,q)=>s+(q||0),0);
-  document.getElementById('hdr-dupes').textContent='🔁 '+totalDupes+' repetida'+(totalDupes===1?'':'s');
+  document.getElementById('hdr-dupes').textContent='🔁 '+totalDupes+' duplicate'+(totalDupes===1?'':'s');
   document.getElementById('hdr-bar').style.width=p+'%';
 }
 
@@ -1559,9 +1559,9 @@ function renderDupes(){
   document.getElementById('dupes-copy-btn').disabled=!hasItems;
   document.getElementById('dupes-csv-btn').disabled=!hasItems;
   summary.textContent=hasItems
-    ? `${totalCount} repetida(s) · ${totalKinds} carta(s) diferente(s)`
-    : 'Nenhuma repetida ainda';
-  if(!hasItems){ list.innerHTML='<div class="dupes-empty">Abra uma carta e use 🔁 Repetidas para registrar quantas extras você tem.</div>'; return; }
+    ? `${totalCount} duplicate(s) · ${totalKinds} different card(s)`
+    : 'No duplicates yet';
+  if(!hasItems){ list.innerHTML='<div class="dupes-empty">Open a card and use 🔁 Duplicates to record how many extras you have.</div>'; return; }
   list.innerHTML=items.map(d=>{
     const num=String(d.id).padStart(3,'0');
     return `<div class="dupe-row">
@@ -1584,21 +1584,21 @@ function dupesAsText(){
 }
 function copyDupes(){
   const txt=dupesAsText();
-  if(!txt){showToast('Nenhuma repetida para copiar','info');return;}
+  if(!txt){showToast('No duplicates to copy','info');return;}
   if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(()=>showToast('Lista copiada!','success'),()=>fallbackCopy(txt));
+    navigator.clipboard.writeText(txt).then(()=>showToast('List copied!','success'),()=>fallbackCopy(txt));
   }else fallbackCopy(txt);
 }
 function fallbackCopy(txt){
   const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
   document.body.appendChild(ta);ta.select();
-  try{document.execCommand('copy');showToast('Lista copiada!','success');}catch(e){showToast('Não foi possível copiar','info');}
+  try{document.execCommand('copy');showToast('List copied!','success');}catch(e){showToast('Could not copy','info');}
   document.body.removeChild(ta);
 }
 function exportDupesCsv(){
   const items=dupeList();
-  if(!items.length){showToast('Nenhuma repetida para exportar','info');return;}
-  const rows=[['Numero','Selecao','Nome','Quantidade'],
+  if(!items.length){showToast('No duplicates to export','info');return;}
+  const rows=[['Number','Team','Name','Quantity'],
     ...items.map(d=>[String(d.id).padStart(3,'0'),d.card.team,d.card.name,d.qty])];
   const csv=rows.map(r=>r.map(v=>{
     v=String(v);
@@ -1607,10 +1607,10 @@ function exportDupesCsv(){
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url;a.download='repetidas-adrenalynxl.csv';
+  a.href=url;a.download='duplicates-adrenalynxl.csv';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url),1000);
-  showToast('CSV exportado!','success');
+  showToast('CSV exported!','success');
 }
 
 function toggleCard(cardId,add){
@@ -1653,23 +1653,23 @@ function setScanStatus(icon,text,sub){
 async function startScanner(){
   if(camStream)return;
   const video=document.getElementById('cam');
-  setScanStatus('⏳','Abrindo câmera…','Permita o acesso à câmera');
+  setScanStatus('⏳','Opening camera…','Please allow camera access');
   try{
     camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
     video.srcObject=camStream; await video.play();
   }catch(e){
     camStream=null;
-    setScanStatus('❌','Câmera indisponível','Use a entrada manual abaixo');
+    setScanStatus('❌','Camera unavailable','Use manual entry below');
     return;
   }
   if(!ocrWorker){
-    if(!window.Tesseract){setScanStatus('⏳','Carregando leitor…','Aguarde alguns segundos');}
+    if(!window.Tesseract){setScanStatus('⏳','Loading reader…','Please wait a few seconds');}
     try{
       ocrWorker=await Tesseract.createWorker('eng');
       await ocrWorker.setParameters({tessedit_char_whitelist:'0123456789',tessedit_pageseg_mode:'7'});
     }catch(e){ ocrWorker=null; }
   }
-  setScanStatus('🟢','Câmera ativa','Aponte para o número da carta e segure firme');
+  setScanStatus('🟢','Camera active','Point at the card number and hold steady');
   pendingNum=null; pendingCount=0;
   ocrTimer=setInterval(scanFrame,1300);
 }
@@ -1717,10 +1717,10 @@ function handleOcr(digits){
   if(n===lastAdded && now-lastAddedAt<5000)return; // don't re-add the same card
   pendingCount=0;
   const c=ALL_CARDS.find(x=>x.id===n);
-  if(!c){setScanStatus('🟢','Câmera ativa','Número fora da lista, tente de novo');return;}
+  if(!c){setScanStatus('🟢','Camera active','Number not in the list, try again');return;}
   if(owned.has(n)){
     lastAdded=n; lastAddedAt=now;
-    setScanStatus('✓',`#${n} ${c.name}`,'Você já tem essa carta');
+    setScanStatus('✓',`#${n} ${c.name}`,'You already have this card');
     return;
   }
   // auto-add
@@ -1728,8 +1728,8 @@ function handleOcr(digits){
   recentAdds=[n,...recentAdds.filter(x=>x!==n)].slice(0,10);
   saveOwned();
   lastAdded=n; lastAddedAt=now;
-  showToast(`✓ #${n} ${c.name} adicionada!`,'success');
-  setScanStatus('🎉',`#${n} ${c.name}`,'Adicionada! Aponte para a próxima carta');
+  showToast(`✓ #${n} ${c.name} added!`,'success');
+  setScanStatus('🎉',`#${n} ${c.name}`,'Added! Point at the next card');
   updateHeader();renderDashboard();renderCollection();renderStats();renderRecentAdds();
 }
 
@@ -1852,7 +1852,7 @@ let currentUser=null;
 // Fill these 3 values from your EmailJS account to enable the welcome email.
 // While empty, sign-up still works normally and simply skips the email.
 const EMAILJS_CFG={ publicKey:'KO5pcwZOJschC1zuf', serviceId:'service_wkzw01s', templateId:'template_9yaoico' };
-const WELCOME_SUBJECT='⚽ Bem-vindo ao seu álbum Adrenalyn XL — Copa do Mundo 2026!';
+const WELCOME_SUBJECT='⚽ Welcome to your Adrenalyn XL album — World Cup 2026!';
 function welcomeEmailHtml(email){
   const name=(email||'').split('@')[0];
   return `<div style="font-family:Arial,Helvetica,sans-serif;background:#0A1930;padding:24px;color:#fff">
@@ -1863,23 +1863,23 @@ function welcomeEmailHtml(email){
         <div style="color:#9fb3d1;font-size:13px">FIFA World Cup 2026™</div>
       </div>
       <div style="padding:24px">
-        <p style="font-size:16px;margin:0 0 12px">Olá, <b>${name}</b>! 👋</p>
+        <p style="font-size:16px;margin:0 0 12px">Hi, <b>${name}</b>! 👋</p>
         <p style="font-size:14px;line-height:1.6;color:#dbe6f5;margin:0 0 12px">
-          Que alegria ter você no time! 🎉 Obrigado por se cadastrar e por escolher o nosso site
-          para montar a sua coleção da <b>Copa do Mundo 2026</b>.
+          So glad to have you on the team! 🎉 Thanks for signing up and choosing our site
+          to build your <b>World Cup 2026</b> collection.
         </p>
         <p style="font-size:14px;line-height:1.6;color:#dbe6f5;margin:0 0 12px">
-          Agora é só começar a craque-ar: registre as cartas que você já tem, acompanhe o seu
-          progresso rumo às <b>630 cartas</b> e veja seu álbum encher a cada figurinha. 📈
+          Now it's time to play: log the cards you already have, track your progress toward all
+          <b>630 cards</b>, and watch your album fill up sticker by sticker. 📈
         </p>
         <p style="font-size:14px;line-height:1.6;color:#dbe6f5;margin:0 0 20px">
-          Aponte a câmera para o número da carta e ela entra na coleção automaticamente. Simples assim! 📷
+          Point your camera at the card number and it's added to your collection automatically. Easy! 📷
         </p>
         <div style="text-align:center;margin:18px 0">
-          <a href="https://lucianoamoretti.github.io/adrenalynxl/" style="display:inline-block;background:#F4C430;color:#0A1930;text-decoration:none;font-weight:bold;padding:12px 26px;border-radius:99px;font-size:14px">Abrir meu álbum ⚡</a>
+          <a href="https://lucianoamoretti.github.io/adrenalynxl/" style="display:inline-block;background:#F4C430;color:#0A1930;text-decoration:none;font-weight:bold;padding:12px 26px;border-radius:99px;font-size:14px">Open my album ⚡</a>
         </div>
         <p style="font-size:13px;line-height:1.6;color:#9fb3d1;margin:14px 0 0">
-          Boa sorte e boas trocas — que comece o jogo! 🟢⚪🔴<br>Time Adrenalyn XL
+          Good luck and happy trading — let the game begin! 🟢⚪🔴<br>The Adrenalyn XL Team
         </p>
       </div>
     </div>
@@ -1901,17 +1901,17 @@ function sendWelcomeEmail(email){
 function authMsg(m){document.getElementById('auth-error').textContent=m||'';}
 function authErrPt(code){
   const map={
-    'auth/invalid-email':'Email inválido.',
-    'auth/missing-password':'Informe a senha.',
-    'auth/weak-password':'A senha precisa ter ao menos 6 caracteres.',
-    'auth/email-already-in-use':'Esse email já tem uma conta. Tente entrar.',
-    'auth/invalid-credential':'Email ou senha incorretos.',
-    'auth/wrong-password':'Email ou senha incorretos.',
-    'auth/user-not-found':'Conta não encontrada. Crie uma conta.',
-    'auth/too-many-requests':'Muitas tentativas. Aguarde um pouco.',
-    'auth/network-request-failed':'Falha de conexão. Verifique a internet.'
+    'auth/invalid-email':'Invalid email.',
+    'auth/missing-password':'Enter your password.',
+    'auth/weak-password':'Password must be at least 6 characters.',
+    'auth/email-already-in-use':'This email already has an account. Try logging in.',
+    'auth/invalid-credential':'Incorrect email or password.',
+    'auth/wrong-password':'Incorrect email or password.',
+    'auth/user-not-found':'Account not found. Create an account.',
+    'auth/too-many-requests':'Too many attempts. Please wait a moment.',
+    'auth/network-request-failed':'Connection failed. Check your internet.'
   };
-  return map[code]||('Erro: '+code);
+  return map[code]||('Error: '+code);
 }
 function setAuthBusy(b){
   document.getElementById('auth-login-btn').disabled=b;
@@ -1921,7 +1921,7 @@ async function doLogin(){
   const email=document.getElementById('auth-email').value.trim();
   const pass=document.getElementById('auth-pass').value;
   authMsg('');
-  if(!email||!pass){authMsg('Preencha email e senha.');return;}
+  if(!email||!pass){authMsg('Enter your email and password.');return;}
   setAuthBusy(true);
   try{ await fbAuth.signInWithEmailAndPassword(email,pass); }
   catch(e){ authMsg(authErrPt(e.code)); }
@@ -1931,13 +1931,13 @@ async function doSignup(){
   const email=document.getElementById('auth-email').value.trim();
   const pass=document.getElementById('auth-pass').value;
   authMsg('');
-  if(!email){authMsg('Informe um email.');return;}
-  if(pass.length<6){authMsg('A senha precisa ter ao menos 6 caracteres.');return;}
+  if(!email){authMsg('Enter an email.');return;}
+  if(pass.length<6){authMsg('Password must be at least 6 characters.');return;}
   setAuthBusy(true);
   try{
     await fbAuth.createUserWithEmailAndPassword(email,pass);
     sendWelcomeEmail(email);
-    showToast('Conta criada! Enviamos um email de boas-vindas 📧','success');
+    showToast('Account created! We sent you a welcome email 📧','success');
   }
   catch(e){ authMsg(authErrPt(e.code)); }
   finally{ setAuthBusy(false); }
@@ -1947,7 +1947,7 @@ function doLogout(){ fbAuth.signOut(); }
 async function persist(){
   if(!currentUser)return;
   try{ await fbDb.collection('users').doc(currentUser.uid).set({owned:[...owned],recent:recentAdds,dupes:dupes},{merge:true}); }
-  catch(e){ console.error('persist failed',e); showToast('Falha ao salvar na nuvem','info'); }
+  catch(e){ console.error('persist failed',e); showToast('Failed to save to cloud','info'); }
 }
 async function loadUserData(uid){
   let data=null;
