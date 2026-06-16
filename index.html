@@ -248,6 +248,10 @@
 
     /* ── Scanner Screen ── */
     .scanner-wrap { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .add-search-wrap { position: relative; }
+    .add-hint { text-align: center; color: var(--text-muted); font-size: 13px; padding: 30px 16px; }
+    .add-row-cta { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: rgba(244,196,48,0.15); color: var(--gold); font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .add-row-cta.owned { background: rgba(120,200,120,0.18); color: #7ec77e; }
     .qr-viewport { background: var(--navy-mid); border: 2px dashed var(--gold); border-radius: var(--radius); overflow: hidden; position: relative; aspect-ratio: 1; max-width: 320px; margin: 0 auto; width: 100%; }
     .qr-viewport #cam { width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
     .qr-overlay { position: absolute; inset: 0; pointer-events: none; }
@@ -480,18 +484,10 @@
     <!-- SCANNER -->
     <div class="screen" id="screen-scanner">
       <div class="scanner-wrap">
-        <div class="scanner-status" id="scanner-status">
-          <div class="scanner-status-icon">🚧</div>
-          <div class="scanner-status-text">Camera scanner on stand-by</div>
-          <div class="scanner-status-sub">Temporarily disabled while we find a more accurate method. Add cards by number below.</div>
+        <div class="add-search-wrap">
+          <input class="search-input" id="add-search" type="search" placeholder="Search by name or number…" autocomplete="off" oninput="renderAddResults()">
         </div>
-        <div class="manual-add">
-          <div class="manual-title">Add by number</div>
-          <div class="manual-row">
-            <input class="manual-input" id="manual-num" type="number" min="1" max="924" placeholder="1–630, or 631+ (extras)" inputmode="numeric">
-            <button class="btn-primary" onclick="addManual()">Add</button>
-          </div>
-        </div>
+        <div id="add-results"></div>
         <div class="recent-adds" id="recent-adds-box" style="display:none">
           <div class="section-title" style="margin-bottom:8px">Recently Added</div>
           <div id="recent-list"></div>
@@ -563,8 +559,8 @@
       <span class="nav-label">Collection</span>
     </button>
     <button class="nav-btn" id="nav-scanner" onclick="switchScreen('scanner')">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M21 5h-6v6h6V5zm-6 8h1.5v1.5H15V13zm1.5 1.5H18V16h-1.5v-1.5zM18 13h1.5v1.5H18V13zm-3 3h1.5v1.5H15V16zm1.5 1.5H18V19h-1.5v-1.5zM18 16h1.5v1.5H18V16zm1.5-1.5H21V16h-1.5v-1.5zm0 3H21V19h-1.5v-1.5zM22 7h-1V3h-4V2h5v5zM7 22v-1H3v-4H2v5h5zm13 0h-4v-1h3v-3h1v4zM3 7V3h4V2H2v5h1z"/></svg>
-      <span class="nav-label">Scanner</span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/></svg>
+      <span class="nav-label">Add Cards</span>
     </button>
     <button class="nav-btn" id="nav-dupes" onclick="switchScreen('dupes')">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
@@ -1563,9 +1559,13 @@ function openFilter(key){
   renderFilterChips();switchScreen('collection');
 }
 
-function filterCards(){searchQuery=document.getElementById('search-input').value.toLowerCase();renderCollection();}
+// accent-insensitive normalizer used by every search field
+function norm(s){return (s==null?'':s.toString()).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+
+function filterCards(){searchQuery=document.getElementById('search-input').value;renderCollection();}
 
 function getFilteredCards(){
+  const q=norm(searchQuery.trim());
   return ALL_CARDS.filter(c=>{
     if(activeFilter==='owned'   &&!owned.has(c.id))return false;
     if(activeFilter==='missing' && owned.has(c.id))return false;
@@ -1573,12 +1573,39 @@ function getFilteredCards(){
     if(activeFilter.startsWith('team:')&&c.team!==activeFilter.slice(5))return false;
     if(activeFilter.startsWith('rar:') &&catR(c)!==activeFilter.slice(4))return false;
     if(activeFilter.startsWith('pos:') &&c.pos !==activeFilter.slice(4))return false;
-    if(searchQuery){
-      const q=searchQuery;
-      if(!c.name.toLowerCase().includes(q)&&!c.team.toLowerCase().includes(q)&&!String(c.id).includes(q))return false;
+    if(q){
+      if(!norm(c.name).includes(q)&&!norm(c.team).includes(q)&&!String(c.id).includes(q))return false;
     }
     return true;
   });
+}
+
+// ── Add Cards: live search by name or number (accent-insensitive) ──
+function renderAddResults(){
+  const box=document.getElementById('add-results'); if(!box)return;
+  const raw=(document.getElementById('add-search').value||'').trim();
+  if(!raw){ box.innerHTML='<div class="add-hint">Type a name or number to find a card.</div>'; return; }
+  const all=[...ALL_CARDS,...EXTRA_CARDS];
+  let res;
+  if(/^\d+$/.test(raw)){
+    res=all.filter(c=>String(c.id).includes(raw));
+  }else{
+    const q=norm(raw);
+    res=all.filter(c=>norm(c.name).includes(q)||norm(c.team).includes(q));
+  }
+  res=res.sort((a,b)=>a.id-b.id).slice(0,50);
+  if(!res.length){ box.innerHTML='<div class="add-hint">No cards found.</div>'; return; }
+  box.innerHTML=res.map(c=>{
+    const num=String(c.id).padStart(3,'0'), has=owned.has(c.id);
+    return `<div class="dupe-row" onclick="openModal(${c.id})" style="cursor:pointer">
+      <img class="dupe-thumb" src="images/cards/${num}.jpeg" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="dupe-info">
+        <div class="dupe-name">#${num} · ${c.name}</div>
+        <div class="dupe-meta">${c.flag} ${c.team}</div>
+      </div>
+      <div class="add-row-cta${has?' owned':''}">${has?'✓':'+'}</div>
+    </div>`;
+  }).join('');
 }
 
 function renderExtraTiles(){
@@ -1923,14 +1950,6 @@ function toggleCard(cardId,add){
     :`<button class="btn-add" onclick="toggleCard(${cardId},true)">Add to collection ✓</button>`;
 }
 
-// ── Manual Add ──
-function addManual(){
-  const input=document.getElementById('manual-num');
-  const num=parseInt(input.value);
-  if(!num||!cardById(num)){showToast('Enter a valid card number (1–630 or an extra)','error');return;}
-  input.value='';openModal(num);
-}
-document.getElementById('manual-num').addEventListener('keydown',e=>{if(e.key==='Enter')addManual();});
 
 // ── Scanner (OCR: reads the printed card number from the camera) ──
 let camStream=null, ocrTimer=null, ocrWorker=null, ocrBusy=false, ocrReady=false;
@@ -2132,7 +2151,7 @@ function switchScreen(name){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
-  if(name==='scanner')startScanner();else stopScanner();
+  if(name==='scanner')renderAddResults();
   if(name==='dashboard') renderDashboard();
   if(name==='collection')renderCollection();
   if(name==='stats')     renderStats();
