@@ -112,18 +112,100 @@
     .filter-chip { flex-shrink: 0; padding: 6px 14px; border-radius: 99px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
     .filter-chip.active { background: var(--gold); border-color: var(--gold); color: var(--navy-dark); }
 
-    .coll-list { padding: 0 12px; }
-    .group-header { padding: 12px 4px 6px; display: flex; align-items: center; gap: 8px; }
+    .coll-list { padding: 0 10px; }
+    .group-header { padding: 12px 2px 6px; display: flex; align-items: center; gap: 8px; }
     .group-flag { font-size: 18px; }
     .group-name { font-size: 13px; font-weight: 700; flex: 1; }
     .group-count { font-size: 11px; color: var(--text-muted); }
 
-    .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 0 4px; }
-    .card-item { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
-    .card-item.owned { border-color: var(--gold); background: rgba(244,196,48,0.08); }
-    .card-item.owned::after { content: '✓'; position: absolute; top: 4px; right: 6px; font-size: 10px; color: var(--gold); font-weight: 700; }
-    .card-num { font-size: 9px; color: var(--text-dim); font-weight: 600; }
-    .card-name { font-size: 10px; font-weight: 600; line-height: 1.2; word-break: break-word; }
+    /* ── Card Grid ── */
+    .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 0 0 4px; }
+
+    /* ── Card Item ── */
+    .card-item {
+      border-radius: 10px; cursor: pointer;
+      position: relative; overflow: hidden;
+      aspect-ratio: 5/7; transition: transform 0.12s, box-shadow 0.2s;
+    }
+    .card-item:active { transform: scale(0.95); }
+    .card-item.owned { box-shadow: 0 0 0 1.5px var(--gold), 0 4px 16px rgba(244,196,48,0.22); }
+
+    /* Card art inner layer — gets filter applied */
+    .card-art {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column; padding: 6px 6px 7px;
+      position: relative; transition: filter 0.25s, opacity 0.25s;
+    }
+    /* NOT owned: preto e branco + opacidade bem fraca */
+    .card-item:not(.owned) .card-art {
+      filter: grayscale(100%) brightness(0.55);
+      opacity: 0.18;
+    }
+    /* Owned: cor plena */
+    .card-item.owned .card-art { filter: none; opacity: 1; }
+
+    /* Check badge */
+    .card-check {
+      position: absolute; top: 4px; right: 4px;
+      background: var(--gold); color: var(--navy-dark);
+      font-size: 7px; font-weight: 900;
+      width: 14px; height: 14px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 2;
+    }
+    .card-item.owned .card-check { opacity: 1; }
+
+    /* Card inner layout */
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
+    .card-num { font-size: 7px; font-weight: 700; color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.35); padding: 1px 4px; border-radius: 4px; }
+    .card-rar { font-size: 6px; font-weight: 800; letter-spacing: 0.3px; padding: 1px 4px; border-radius: 4px; text-transform: uppercase; }
+    .card-flag-wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .card-flag { font-size: 26px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)); }
+    .card-bottom { }
+    .card-name { font-size: 7.5px; font-weight: 800; line-height: 1.2; text-align: center; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); word-break: break-word; margin-bottom: 3px; }
+    .card-cat-pill { display: inline-block; font-size: 5.5px; font-weight: 700; padding: 1px 5px; border-radius: 99px; letter-spacing: 0.3px; text-transform: uppercase; }
+
+    /* Category gradient backgrounds */
+    .cat-base       { background: linear-gradient(160deg,#1C3A6A,#0D2040 70%,#060F22); }
+    .cat-team-crest { background: linear-gradient(160deg,#1A3A80,#0D2555 70%,#07163A); }
+    .cat-mascot     { background: linear-gradient(160deg,#243080,#141E60); }
+    .cat-contender  { background: linear-gradient(160deg,#183870,#0A2050); }
+    .cat-def-rock   { background: linear-gradient(160deg,#3A1880,#220B5E 70%,#110535); }
+    .cat-fan-fav    { background: linear-gradient(160deg,#4A0A9A,#300470 70%,#18024A); }
+    .cat-goal-mach  { background: linear-gradient(160deg,#6A1800,#450B00 70%,#240500); }
+    .cat-icon       { background: linear-gradient(160deg,#4A3500,#2E1F00 70%,#180E00); }
+    .cat-rookies    { background: linear-gradient(160deg,#0A4A30,#053020 70%,#021508); }
+    .cat-midfield   { background: linear-gradient(160deg,#2A1260,#180940 70%,#0C0525); }
+    .cat-keeper     { background: linear-gradient(160deg,#0A2A5A,#051A40 70%,#020D25); }
+
+    /* Rarity badge colors */
+    .rar-common   { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
+    .rar-rare     { background: rgba(100,149,237,0.3); color: #9AB8F5; }
+    .rar-ultra    { background: rgba(180,80,220,0.35); color: #E090F0; }
+    .rar-momentum { background: rgba(255,80,40,0.35); color: #FF9070; }
+    .rar-le       { background: rgba(244,196,48,0.3); color: #FFD966; }
+
+    /* Category pill colors */
+    .pill-common   { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.65); }
+    .pill-rare     { background: rgba(100,149,237,0.3); color: #9AB8F5; }
+    .pill-ultra    { background: rgba(180,80,220,0.35); color: #E090F0; }
+    .pill-momentum { background: rgba(255,80,40,0.35); color: #FF9070; }
+    .pill-le       { background: rgba(244,196,48,0.3); color: #FFD966; }
+
+    /* Shimmer on owned special cards */
+    .card-item.owned .cat-fan-fav::before,
+    .card-item.owned .cat-icon::before,
+    .card-item.owned .cat-goal-mach::before,
+    .card-item.owned .cat-def-rock::before,
+    .card-item.owned .cat-midfield::before {
+      content: ''; position: absolute;
+      top: -50%; left: -60%; width: 35%; height: 200%;
+      background: linear-gradient(105deg,transparent,rgba(255,255,255,0.09),transparent);
+      animation: shimmer 3s ease-in-out infinite; pointer-events: none;
+    }
+    @keyframes shimmer { 0%,100% { left:-60%; } 50% { left:120%; } }
+
+    /* Old badge classes (used in modal) */
     .card-badge { font-size: 8px; font-weight: 700; padding: 1px 5px; border-radius: 99px; margin-top: 2px; letter-spacing: 0.2px; }
     .badge-common { background: rgba(255,255,255,0.1); color: var(--text-muted); }
     .badge-rare { background: rgba(100,149,237,0.25); color: #6495ED; }
@@ -708,13 +790,26 @@ function renderCollection() {
     <div class="cards-grid">`;
     for (const c of groupCards) {
       const isOwned = owned.has(c.id);
-      const cat = CATEGORIES[c.category] || { rarity: c.rarity };
-      const badgeClass = `badge-${cat.rarity === 'common' ? 'common' : cat.rarity === 'rare' ? 'rare' : cat.rarity === 'ultra' ? 'ultra' : 'le'}`;
-      const catLabel = CATEGORIES[c.category] ? CATEGORIES[c.category].label : c.category;
+      const cat = CATEGORIES[c.category] || { label: c.category, rarity: c.rarity, icon: '' };
+      const rar = c.rarity;
+      const rarClass = `rar-${rar === 'common' ? 'common' : rar === 'rare' ? 'rare' : rar === 'ultra' ? 'ultra' : rar === 'momentum' ? 'momentum' : 'le'}`;
+      const pillClass = `pill-${rar === 'common' ? 'common' : rar === 'rare' ? 'rare' : rar === 'ultra' ? 'ultra' : rar === 'momentum' ? 'momentum' : 'le'}`;
+      const catCss = `cat-${c.category.replace(/[^a-z0-9]/g, '-')}`;
+      const rarLabel = RARITIES[rar] ? RARITIES[rar].label.split(' ')[0] : rar;
+      const catShort = cat.label.replace('Midfield Maestros','Midfield').replace('Master Rookies','Rookies').replace('Defensive Rocks','Defense').replace('Goal Machines','Goals').replace('Fan Favourites','Fan Fav').replace('Team Keepers','Keepers').replace('Team Crests','Crest');
       html += `<div class="card-item ${isOwned ? 'owned' : ''}" onclick="openModal(${c.id})">
-        <div class="card-num">#${c.id}</div>
-        <div class="card-name">${c.name}</div>
-        <div class="card-badge ${badgeClass}">${catLabel.split(' ')[0]}</div>
+        <div class="card-art ${catCss}">
+          <div class="card-top">
+            <span class="card-num">#${String(c.id).padStart(3,'0')}</span>
+            <span class="card-rar ${rarClass}">${rarLabel}</span>
+          </div>
+          <div class="card-flag-wrap"><span class="card-flag">${c.flag}</span></div>
+          <div class="card-bottom">
+            <div class="card-name">${c.name}</div>
+            <span class="card-cat-pill ${pillClass}">${catShort}</span>
+          </div>
+        </div>
+        <div class="card-check">✓</div>
       </div>`;
     }
     html += '</div>';
