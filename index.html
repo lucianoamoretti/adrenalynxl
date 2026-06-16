@@ -348,6 +348,32 @@
     .logout-btn { background: transparent; border: 1px solid var(--card-border); color: var(--text-muted); border-radius: 99px; padding: 5px 12px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .logout-btn:hover { color: var(--white); border-color: var(--gold); }
     .header-right { display: flex; align-items: center; gap: 10px; }
+
+    /* ── Duplicates: modal stepper ── */
+    .modal-dupes { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 14px; padding: 10px 14px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); }
+    .modal-dupes-label { font-size: 13px; font-weight: 700; color: var(--white); }
+    .dupes-stepper { display: flex; align-items: center; gap: 14px; }
+    .dupes-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--card-border); background: rgba(255,255,255,0.06); color: var(--gold); font-size: 20px; font-weight: 700; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .dupes-btn:active { transform: scale(0.92); }
+    .dupes-count { font-size: 18px; font-weight: 800; min-width: 22px; text-align: center; color: var(--white); }
+
+    /* ── Duplicates: screen ── */
+    .dupes-pad { padding: 16px 16px 0; }
+    .dupes-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .dupes-title { font-size: 20px; font-weight: 800; color: var(--gold); }
+    .dupes-summary { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .dupes-export-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .dupes-export-row button { flex: 1; }
+    .btn-secondary { background: transparent; color: var(--white); border: 1px solid var(--card-border); border-radius: 99px; padding: 10px 16px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-secondary:hover { border-color: var(--gold); }
+    .dupe-row { display: flex; align-items: center; gap: 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 7px; }
+    .dupe-thumb { width: 34px; height: 48px; border-radius: 5px; object-fit: cover; object-position: top; flex-shrink: 0; background: var(--navy-mid); }
+    .dupe-info { flex: 1; min-width: 0; }
+    .dupe-name { font-size: 13px; font-weight: 700; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dupe-meta { font-size: 11px; color: var(--text-muted); }
+    .dupe-stepper { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .dupe-qty { font-size: 15px; font-weight: 800; min-width: 26px; text-align: center; color: var(--gold); }
+    .dupes-empty { text-align: center; color: var(--text-muted); font-size: 13px; padding: 40px 16px; }
   </style>
 </head>
 <body>
@@ -454,6 +480,23 @@
       </div>
     </div>
 
+    <!-- DUPLICATES -->
+    <div class="screen" id="screen-dupes">
+      <div class="dupes-pad">
+        <div class="dupes-head">
+          <div>
+            <div class="dupes-title">🔁 Repetidas</div>
+            <div class="dupes-summary" id="dupes-summary">Nenhuma repetida ainda</div>
+          </div>
+        </div>
+        <div class="dupes-export-row">
+          <button class="btn-primary" id="dupes-copy-btn" onclick="copyDupes()">Copiar lista</button>
+          <button class="btn-secondary" id="dupes-csv-btn" onclick="exportDupesCsv()">Baixar CSV</button>
+        </div>
+        <div id="dupes-list"></div>
+      </div>
+    </div>
+
     <!-- STATS -->
     <div class="screen" id="screen-stats">
       <div class="stats-pad">
@@ -504,6 +547,10 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M21 5h-6v6h6V5zm-6 8h1.5v1.5H15V13zm1.5 1.5H18V16h-1.5v-1.5zM18 13h1.5v1.5H18V13zm-3 3h1.5v1.5H15V16zm1.5 1.5H18V19h-1.5v-1.5zM18 16h1.5v1.5H18V16zm1.5-1.5H21V16h-1.5v-1.5zm0 3H21V19h-1.5v-1.5zM22 7h-1V3h-4V2h5v5zM7 22v-1H3v-4H2v5h5zm13 0h-4v-1h3v-3h1v4zM3 7V3h4V2H2v5h1z"/></svg>
       <span class="nav-label">Scanner</span>
     </button>
+    <button class="nav-btn" id="nav-dupes" onclick="switchScreen('dupes')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span class="nav-label">Repetidas</span>
+    </button>
     <button class="nav-btn" id="nav-stats" onclick="switchScreen('stats')">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
       <span class="nav-label">Stats</span>
@@ -529,6 +576,14 @@
       <div class="modal-card-name" id="modal-name"></div>
       <div class="modal-card-team" id="modal-team"></div>
       <div class="modal-rarity" id="modal-rarity"></div>
+    </div>
+    <div class="modal-dupes">
+      <span class="modal-dupes-label">🔁 Repetidas</span>
+      <div class="dupes-stepper">
+        <button class="dupes-btn" onclick="changeDupe(-1)" aria-label="menos">−</button>
+        <span class="dupes-count" id="modal-dupes-count">0</span>
+        <button class="dupes-btn" onclick="changeDupe(1)" aria-label="mais">+</button>
+      </div>
     </div>
     <div class="modal-actions" id="modal-actions"></div>
   </div>
@@ -1229,8 +1284,10 @@ function teamFlag(name){return ALL_CARDS.find(c=>c.team===name)?.flag||'🌐';}
 // ── State (catalog lives in the cloud, per logged-in user) ──
 let owned=new Set();
 let recentAdds=[];
+let dupes={};            // cardId -> number of duplicates the user has
 function saveOwned(){persist();}
 function saveRecent(){persist();}
+function saveDupes(){persist();}
 
 // ── Filter state ──
 let activeFilter='all';
@@ -1452,6 +1509,7 @@ function openModal(cardId){
   document.getElementById('modal-actions').innerHTML=isOwned
     ?`<button class="btn-remove" onclick="toggleCard(${cardId},false)">Remove from collection</button>`
     :`<button class="btn-add" onclick="toggleCard(${cardId},true)">Add to collection ✓</button>`;
+  document.getElementById('modal-dupes-count').textContent=dupes[cardId]||0;
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -1463,6 +1521,91 @@ function closeModal(){
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape' && document.getElementById('modal-overlay').classList.contains('open')) closeModal();
 });
+
+// ── Duplicates ──
+function setDupe(cardId,qty){
+  qty=Math.max(0,qty|0);
+  if(qty===0) delete dupes[cardId]; else dupes[cardId]=qty;
+  saveDupes();
+  if(modalCardId===cardId) document.getElementById('modal-dupes-count').textContent=qty;
+  renderDupes();updateHeader();
+}
+function changeDupe(delta){
+  if(modalCardId==null)return;
+  setDupe(modalCardId,(dupes[modalCardId]||0)+delta);
+}
+function dupeList(){
+  return Object.keys(dupes)
+    .map(id=>({id:+id,qty:dupes[id]}))
+    .filter(d=>d.qty>0)
+    .map(d=>({...d,card:ALL_CARDS.find(c=>c.id===d.id)}))
+    .filter(d=>d.card)
+    .sort((a,b)=>a.id-b.id);
+}
+function renderDupes(){
+  const list=document.getElementById('dupes-list');
+  const summary=document.getElementById('dupes-summary');
+  if(!list)return;
+  const items=dupeList();
+  const totalKinds=items.length;
+  const totalCount=items.reduce((s,d)=>s+d.qty,0);
+  const hasItems=totalKinds>0;
+  document.getElementById('dupes-copy-btn').disabled=!hasItems;
+  document.getElementById('dupes-csv-btn').disabled=!hasItems;
+  summary.textContent=hasItems
+    ? `${totalCount} repetida(s) · ${totalKinds} carta(s) diferente(s)`
+    : 'Nenhuma repetida ainda';
+  if(!hasItems){ list.innerHTML='<div class="dupes-empty">Abra uma carta e use 🔁 Repetidas para registrar quantas extras você tem.</div>'; return; }
+  list.innerHTML=items.map(d=>{
+    const num=String(d.id).padStart(3,'0');
+    return `<div class="dupe-row">
+      <img class="dupe-thumb" src="images/cards/${num}.jpeg" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="dupe-info">
+        <div class="dupe-name">#${num} · ${d.card.name}</div>
+        <div class="dupe-meta">${d.card.flag} ${d.card.team}</div>
+      </div>
+      <div class="dupe-stepper">
+        <button class="dupes-btn" onclick="setDupe(${d.id},${d.qty-1})" aria-label="menos">−</button>
+        <span class="dupe-qty">${d.qty}</span>
+        <button class="dupes-btn" onclick="setDupe(${d.id},${d.qty+1})" aria-label="mais">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function dupesAsText(){
+  // NÚMERO, SELEÇÃO, NOME, QTD
+  return dupeList().map(d=>`#${String(d.id).padStart(3,'0')} | ${d.card.team} | ${d.card.name} | x${d.qty}`).join('\n');
+}
+function copyDupes(){
+  const txt=dupesAsText();
+  if(!txt){showToast('Nenhuma repetida para copiar','info');return;}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>showToast('Lista copiada!','success'),()=>fallbackCopy(txt));
+  }else fallbackCopy(txt);
+}
+function fallbackCopy(txt){
+  const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');showToast('Lista copiada!','success');}catch(e){showToast('Não foi possível copiar','info');}
+  document.body.removeChild(ta);
+}
+function exportDupesCsv(){
+  const items=dupeList();
+  if(!items.length){showToast('Nenhuma repetida para exportar','info');return;}
+  const rows=[['Numero','Selecao','Nome','Quantidade'],
+    ...items.map(d=>[String(d.id).padStart(3,'0'),d.card.team,d.card.name,d.qty])];
+  const csv=rows.map(r=>r.map(v=>{
+    v=String(v);
+    return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
+  }).join(',')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='repetidas-adrenalynxl.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  showToast('CSV exportado!','success');
+}
 
 function toggleCard(cardId,add){
   const c=ALL_CARDS.find(x=>x.id===cardId);if(!c)return;
@@ -1666,6 +1809,7 @@ function switchScreen(name){
   if(name==='dashboard') renderDashboard();
   if(name==='collection')renderCollection();
   if(name==='stats')     renderStats();
+  if(name==='dupes')     renderDupes();
 }
 
 // ── Toast ──
@@ -1678,7 +1822,7 @@ function showToast(msg,type='info'){
 }
 
 // ── Init ──
-function renderAll(){updateHeader();renderDashboard();renderCollection();renderStats();renderRecentAdds();}
+function renderAll(){updateHeader();renderDashboard();renderCollection();renderStats();renderRecentAdds();renderDupes();}
 buildFilterOptions();renderFilterChips();renderAll();
 
 // ══════════════════════════════════════════════════
@@ -1795,7 +1939,7 @@ function doLogout(){ fbAuth.signOut(); }
 
 async function persist(){
   if(!currentUser)return;
-  try{ await fbDb.collection('users').doc(currentUser.uid).set({owned:[...owned],recent:recentAdds},{merge:true}); }
+  try{ await fbDb.collection('users').doc(currentUser.uid).set({owned:[...owned],recent:recentAdds,dupes:dupes},{merge:true}); }
   catch(e){ console.error('persist failed',e); showToast('Falha ao salvar na nuvem','info'); }
 }
 async function loadUserData(uid){
@@ -1808,10 +1952,12 @@ async function loadUserData(uid){
   if((!data||!Array.isArray(data.owned)) && localOwned.length){
     owned=new Set(localOwned);
     recentAdds=JSON.parse(localStorage.getItem('wc2026_recent')||'[]');
+    dupes={};
     await persist();
   }else{
     owned=new Set((data&&data.owned)||[]);
     recentAdds=(data&&data.recent)||[];
+    dupes=(data&&data.dupes)||{};
   }
   renderAll();
 }
@@ -1824,7 +1970,7 @@ fbAuth.onAuthStateChanged(async user=>{
     document.getElementById('logout-btn').title='Sair ('+user.email+')';
     overlay.classList.add('hidden');
   }else{
-    owned=new Set(); recentAdds=[];
+    owned=new Set(); recentAdds=[]; dupes={};
     overlay.classList.remove('hidden');
     renderAll();
   }
