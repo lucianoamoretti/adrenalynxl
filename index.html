@@ -79,6 +79,10 @@
     .dash-pad { padding: 16px 16px 0; }
     .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
     .stat-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 14px 12px; }
+    .stat-card-btn { cursor: pointer; transition: border-color 0.15s, transform 0.1s; }
+    .stat-card-btn:hover { border-color: var(--gold); }
+    .stat-card-btn:active { transform: scale(0.98); }
+    .stat-card-cta { font-size: 10px; font-weight: 700; color: var(--gold); margin-top: 8px; letter-spacing: 0.3px; }
     .stat-card-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
     .stat-card-val { font-size: 24px; font-weight: 800; line-height: 1; }
     .stat-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
@@ -411,17 +415,19 @@
     <div class="screen active" id="screen-dashboard">
       <div class="dash-pad">
         <div class="stat-cards">
-          <div class="stat-card">
+          <div class="stat-card stat-card-btn" onclick="openFilter('owned')" role="button" tabindex="0" title="View all collected cards">
             <div class="stat-card-label">Collected</div>
             <div class="stat-card-val" id="s-owned" style="color:var(--gold)">0</div>
             <div class="stat-card-sub" id="s-owned-pct">0% complete</div>
             <div class="stat-card-bar"><div class="stat-card-bar-fill" id="sb-owned" style="width:0%;background:var(--gold)"></div></div>
+            <div class="stat-card-cta">View all →</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card stat-card-btn" onclick="openFilter('missing')" role="button" tabindex="0" title="View all missing cards">
             <div class="stat-card-label">Missing</div>
             <div class="stat-card-val" id="s-missing" style="color:var(--red)">630</div>
             <div class="stat-card-sub">cards to find</div>
             <div class="stat-card-bar"><div class="stat-card-bar-fill" id="sb-missing" style="width:100%;background:var(--red)"></div></div>
+            <div class="stat-card-cta">View all →</div>
           </div>
         </div>
 
@@ -1431,6 +1437,31 @@ function getFilteredCards(){
   });
 }
 
+function cardItemHtml(c){
+  const isOwned=owned.has(c.id);
+  const cm=CAT_META[c.cat]||{rarity:'common',short:c.cat};
+  const rar=cm.rarity;
+  const cardNum=String(c.id).padStart(3,'0');
+  const imgUrl=`images/cards/${cardNum}.jpeg`;
+  const posBadge=c.pos?`<span class="card-pos pos-${c.pos.toLowerCase()}">${c.pos}</span>`:'';
+  const rarLabel=(RARITIES[rar]?.label||rar).split(' ')[0];
+  return `<div class="card-item${isOwned?' owned':''}" onclick="openModal(${c.id})">
+    <div class="card-art cat-${c.cat}">
+      <img class="card-img" src="${imgUrl}" alt="" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-top">
+        <span class="card-num">#${cardNum}</span>
+        <span class="card-rar rar-${rar}">${rarLabel}</span>
+      </div>
+      <div class="card-flag-wrap"><span class="card-flag">${c.flag}</span></div>
+      <div class="card-bottom">
+        <div class="card-name">${c.name}</div>
+        <div class="card-bottom-row">${posBadge}<span class="card-cat-pill pill-${rar}">${cm.short}</span></div>
+      </div>
+    </div>
+    <div class="card-check">✓</div>
+  </div>`;
+}
+
 function renderCollection(){
   const cards=getFilteredCards();
   const list=document.getElementById('coll-list');
@@ -1439,6 +1470,15 @@ function renderCollection(){
     return;
   }
   cards.sort((a,b)=>a.id-b.id);
+  // Collected / Missing: flat list in numeric order (no team grouping)
+  if(activeFilter==='owned'||activeFilter==='missing'){
+    const label=activeFilter==='owned'?'Collected':'Missing';
+    list.innerHTML=`<div class="group-header">
+      <span class="group-name">${label}</span>
+      <span class="group-count">${cards.length}</span>
+    </div><div class="cards-grid">${cards.map(cardItemHtml).join('')}</div>`;
+    return;
+  }
   const grouped={};
   for(const c of cards){
     if(!grouped[c.team])grouped[c.team]=[];
@@ -1453,30 +1493,7 @@ function renderCollection(){
       <span class="group-name">${group}</span>
       <span class="group-count">${gOwned}/${gCards.length}</span>
     </div><div class="cards-grid">`;
-    for(const c of gCards){
-      const isOwned=owned.has(c.id);
-      const cm=CAT_META[c.cat]||{rarity:'common',short:c.cat};
-      const rar=cm.rarity;
-      const cardNum=String(c.id).padStart(3,'0');
-      const imgUrl=`images/cards/${cardNum}.jpeg`;
-      const posBadge=c.pos?`<span class="card-pos pos-${c.pos.toLowerCase()}">${c.pos}</span>`:'';
-      const rarLabel=(RARITIES[rar]?.label||rar).split(' ')[0];
-      html+=`<div class="card-item${isOwned?' owned':''}" onclick="openModal(${c.id})">
-        <div class="card-art cat-${c.cat}">
-          <img class="card-img" src="${imgUrl}" alt="" loading="lazy" onerror="this.style.display='none'">
-          <div class="card-top">
-            <span class="card-num">#${cardNum}</span>
-            <span class="card-rar rar-${rar}">${rarLabel}</span>
-          </div>
-          <div class="card-flag-wrap"><span class="card-flag">${c.flag}</span></div>
-          <div class="card-bottom">
-            <div class="card-name">${c.name}</div>
-            <div class="card-bottom-row">${posBadge}<span class="card-cat-pill pill-${rar}">${cm.short}</span></div>
-          </div>
-        </div>
-        <div class="card-check">✓</div>
-      </div>`;
-    }
+    html+=gCards.map(cardItemHtml).join('');
     html+='</div>';
   }
   list.innerHTML=html;
