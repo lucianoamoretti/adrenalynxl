@@ -1487,10 +1487,16 @@ function renderCollection(){
   // All / Collected / Missing: flat list in numeric order (no team grouping)
   if(activeFilter==='all'||activeFilter==='owned'||activeFilter==='missing'){
     const label=activeFilter==='owned'?'Collected':activeFilter==='missing'?'Missing':'All cards';
+    const exportRow=activeFilter==='missing'
+      ? `<div class="dupes-export-row" style="margin:10px 0 14px">
+           <button class="btn-primary" onclick="copyMissing()">Copy list</button>
+           <button class="btn-secondary" onclick="exportMissingCsv()">Download CSV</button>
+         </div>`
+      : '';
     list.innerHTML=`<div class="group-header">
       <span class="group-name">${label}</span>
       <span class="group-count">${cards.length}</span>
-    </div><div class="cards-grid">${cards.map(cardItemHtml).join('')}</div>`;
+    </div>${exportRow}<div class="cards-grid">${cards.map(cardItemHtml).join('')}</div>`;
     return;
   }
   const grouped={};
@@ -1641,7 +1647,7 @@ function renderDupes(){
   }).join('');
 }
 function dupesAsText(){
-  // NÚMERO, SELEÇÃO, NOME, QTD
+  // NUMBER, TEAM, NAME, QTY
   return dupeList().map(d=>`#${String(d.id).padStart(3,'0')} | ${d.card.team} | ${d.card.name} | x${d.qty}`).join('\n');
 }
 function copyDupes(){
@@ -1670,6 +1676,34 @@ function exportDupesCsv(){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;a.download='duplicates-adrenalynxl.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  showToast('CSV exported!','success');
+}
+
+// ── Missing list export (NUMBER, TEAM, NAME) ──
+function missingList(){ return ALL_CARDS.filter(c=>!owned.has(c.id)).sort((a,b)=>a.id-b.id); }
+function copyMissing(){
+  const items=missingList();
+  if(!items.length){showToast('No missing cards 🎉','info');return;}
+  const txt=items.map(c=>`#${String(c.id).padStart(3,'0')} | ${c.team} | ${c.name}`).join('\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>showToast('List copied!','success'),()=>fallbackCopy(txt));
+  }else fallbackCopy(txt);
+}
+function exportMissingCsv(){
+  const items=missingList();
+  if(!items.length){showToast('No missing cards 🎉','info');return;}
+  const rows=[['Number','Team','Name'],
+    ...items.map(c=>[String(c.id).padStart(3,'0'),c.team,c.name])];
+  const csv=rows.map(r=>r.map(v=>{
+    v=String(v);
+    return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
+  }).join(',')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='missing-adrenalynxl.csv';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url),1000);
   showToast('CSV exported!','success');
