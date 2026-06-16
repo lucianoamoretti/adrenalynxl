@@ -1344,7 +1344,7 @@ function renderCollection(){
       const cm=CAT_META[c.cat]||{rarity:'common',short:c.cat};
       const rar=cm.rarity;
       const cardNum=String(c.id).padStart(3,'0');
-      const imgUrl=`https://www.coleka.com/media/item/202603/18/adrenalyn-xl-fifa-world-cup-2026-carte-n-1-${cardNum}-001.webp`;
+      const imgUrl=`images/cards/${cardNum}.jpeg`;
       const posBadge=c.pos?`<span class="card-pos pos-${c.pos.toLowerCase()}">${c.pos}</span>`:'';
       const rarLabel=(RARITIES[rar]?.label||rar).split(' ')[0];
       html+=`<div class="card-item${isOwned?' owned':''}" onclick="openModal(${c.id})">
@@ -1387,7 +1387,7 @@ function openModal(cardId){
   document.getElementById('modal-cv-num').textContent=`#${cardNum}`;
   const photo=document.getElementById('modal-card-photo');
   photo.style.display='';
-  photo.src=`images/cards/${cardNum}.webp`;
+  photo.src=`images/cards/${cardNum}.jpeg`;
   document.getElementById('modal-num').textContent=`#${cardNum}`;
   document.getElementById('modal-name').textContent=`${c.flag} ${c.name}`;
   document.getElementById('modal-team').textContent=c.team+' · '+cm.label+posLabel;
