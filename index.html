@@ -159,8 +159,9 @@
     .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
     .card-num { font-size: 7px; font-weight: 700; color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.35); padding: 1px 4px; border-radius: 4px; }
     .card-rar { font-size: 6px; font-weight: 800; letter-spacing: 0.3px; padding: 1px 4px; border-radius: 4px; text-transform: uppercase; }
-    .card-flag-wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
-    .card-flag { font-size: 26px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)); }
+    .card-flag-wrap { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .card-avatar { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+    .card-flag { position: absolute; bottom: 2px; right: 3px; font-size: 13px; line-height: 1; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.9)); }
     .card-bottom { }
     .card-name { font-size: 7.5px; font-weight: 800; line-height: 1.2; text-align: center; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); word-break: break-word; margin-bottom: 3px; }
     .card-cat-pill { display: inline-block; font-size: 5.5px; font-weight: 700; padding: 1px 5px; border-radius: 99px; letter-spacing: 0.3px; text-transform: uppercase; }
@@ -797,13 +798,19 @@ function renderCollection() {
       const catCss = `cat-${c.category.replace(/[^a-z0-9]/g, '-')}`;
       const rarLabel = RARITIES[rar] ? RARITIES[rar].label.split(' ')[0] : rar;
       const catShort = cat.label.replace('Midfield Maestros','Midfield').replace('Master Rookies','Rookies').replace('Defensive Rocks','Defense').replace('Goal Machines','Goals').replace('Fan Favourites','Fan Fav').replace('Team Keepers','Keepers').replace('Team Crests','Crest');
+      const isPlayerCard = !['team-crest','mascot','contender'].includes(c.category);
+      const avatarStyle = isPlayerCard ? 'personas' : 'identicon';
+      const avatarUrl = `https://api.dicebear.com/9.x/${avatarStyle}/svg?seed=${encodeURIComponent(c.name)}&backgroundColor=transparent`;
       html += `<div class="card-item ${isOwned ? 'owned' : ''}" onclick="openModal(${c.id})">
         <div class="card-art ${catCss}">
           <div class="card-top">
             <span class="card-num">#${String(c.id).padStart(3,'0')}</span>
             <span class="card-rar ${rarClass}">${rarLabel}</span>
           </div>
-          <div class="card-flag-wrap"><span class="card-flag">${c.flag}</span></div>
+          <div class="card-flag-wrap">
+            <img class="card-avatar" src="${avatarUrl}" alt="" loading="lazy">
+            <span class="card-flag">${c.flag}</span>
+          </div>
           <div class="card-bottom">
             <div class="card-name">${c.name}</div>
             <span class="card-cat-pill ${pillClass}">${catShort}</span>
