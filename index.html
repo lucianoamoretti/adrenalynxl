@@ -80,6 +80,14 @@
     .view-all-btn { width: 100%; background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: var(--navy-dark); border: none; border-radius: var(--radius); padding: 14px; font-size: 14px; font-weight: 800; cursor: pointer; margin-bottom: 12px; transition: transform 0.1s; }
     .view-all-btn:active { transform: scale(0.98); }
     .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .extra-tiles { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .extra-tile { display: flex; align-items: center; gap: 12px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; transition: border-color 0.15s; }
+    .extra-tile:hover { border-color: var(--gold); }
+    .extra-tile-icon { font-size: 22px; }
+    .extra-tile-info { flex: 1; min-width: 0; }
+    .extra-tile-label { font-size: 14px; font-weight: 700; color: var(--white); }
+    .extra-tile-count { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+    .extra-tile-cta { color: var(--gold); font-size: 22px; font-weight: 700; }
     .stat-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 14px 12px; }
     .stat-card-btn { cursor: pointer; transition: border-color 0.15s, transform 0.1s; }
     .stat-card-btn:hover { border-color: var(--gold); }
@@ -440,6 +448,9 @@
             <div class="stat-card-cta">View all →</div>
           </div>
         </div>
+
+        <div class="section-title">Extras (not counted in the 630)</div>
+        <div class="extra-tiles" id="extra-tiles"></div>
 
         <div class="section-title">By Rarity</div>
         <div class="rarity-list" id="rarity-list"></div>
@@ -1295,6 +1306,136 @@ const ALL_CARDS = [
 
 const TOTAL = 630;
 
+// ── Extra sets (do NOT count toward the 630) ──
+const EXTRA_SETS=[
+  {key:"le",label:"Limited Edition",icon:"⭐",cards:[
+    {id:631,name:"Julian Alvarez"},
+    {id:632,name:"Lautaro Martinez"},
+    {id:633,name:"Lionel Messi"},
+    {id:634,name:"Nico Paz"},
+    {id:635,name:"Mathew Ryan"},
+    {id:636,name:"David Alaba"},
+    {id:637,name:"Jeremy Doku"},
+    {id:638,name:"Kevin De Bruyne"},
+    {id:639,name:"Romelu Lukaku"},
+    {id:640,name:"Thibaut Courtois"},
+    {id:641,name:"Estevao"},
+    {id:642,name:"Marquinhos"},
+    {id:643,name:"Raphinha"},
+    {id:644,name:"Rodrygo"},
+    {id:645,name:"Vinicius Junior"},
+    {id:646,name:"Alphonso Davies"},
+    {id:647,name:"Jonathan David"},
+    {id:648,name:"Luis Diaz"},
+    {id:649,name:"Josko Gvardiol"},
+    {id:650,name:"Luka Modric"},
+    {id:651,name:"Moises Caicedo"},
+    {id:652,name:"Willian Pacho"},
+    {id:653,name:"Mohamed Salah"},
+    {id:654,name:"Omar Marmoush"},
+    {id:655,name:"Bukayo Saka"},
+    {id:656,name:"Cole Palmer"},
+    {id:657,name:"Declan Rice"},
+    {id:658,name:"Eberechi Eze"},
+    {id:659,name:"Harry Kane"},
+    {id:660,name:"Jude Bellingham"},
+    {id:661,name:"Aurelien Tchouameni"},
+    {id:662,name:"Desire Doue"},
+    {id:663,name:"Jules Kounde"},
+    {id:664,name:"Kylian Mbappe"},
+    {id:665,name:"Marcus Thuram"},
+    {id:666,name:"Michael Olise"},
+    {id:667,name:"Ousmane Dembele"},
+    {id:668,name:"Antonio Rudiger"},
+    {id:669,name:"Florian Wirtz"},
+    {id:670,name:"Jamal Musiala"},
+    {id:671,name:"Jonathan Tah"},
+    {id:672,name:"Joshua Kimmich"},
+    {id:673,name:"Kai Havertz"},
+    {id:674,name:"Leon Goretzka"},
+    {id:675,name:"Leroy Sane"},
+    {id:676,name:"Marc-Andre ter Stegen"},
+    {id:677,name:"Nick Woltemade"},
+    {id:678,name:"Amad Diallo"},
+    {id:679,name:"Takefusa Kubo"},
+    {id:680,name:"Heung-min Son"},
+    {id:681,name:"Min-jae Kim"},
+    {id:682,name:"Gilberto Mora"},
+    {id:683,name:"Santiago Gimenez"},
+    {id:684,name:"Achraf Hakimi"},
+    {id:685,name:"Brahim Diaz"},
+    {id:686,name:"Denzel Dumfres"},
+    {id:687,name:"Ryan Gravenberch"},
+    {id:688,name:"Tijani Reijnders"},
+    {id:689,name:"Virgil van Dijk"},
+    {id:690,name:"Xavi Simons"},
+    {id:691,name:"Chris Wood"},
+    {id:692,name:"Antonio Nusa"},
+    {id:693,name:"Erling Haaland"},
+    {id:694,name:"Martin Odegaard"},
+    {id:695,name:"Oscar Bobb"},
+    {id:696,name:"Cristiano Ronaldo"},
+    {id:697,name:"Joao Neves"},
+    {id:698,name:"Nuno Mendes"},
+    {id:699,name:"Rafael Leao"},
+    {id:700,name:"Vitinha"},
+    {id:701,name:"Scott McTominay"},
+    {id:702,name:"Sadio Mane"},
+    {id:703,name:"Dean Huijsen"},
+    {id:704,name:"Lamine Yamal"},
+    {id:705,name:"Nico Williams"},
+    {id:706,name:"Pau Cubarsi"},
+    {id:707,name:"Pedri"},
+    {id:708,name:"Rodri"},
+    {id:709,name:"Granit Xhaka"},
+    {id:710,name:"Christian Pulisic"},
+    {id:711,name:"Weston McKennie"},
+    {id:712,name:"Darwin Nunez"},
+    {id:713,name:"Federico Valverde"},
+    {id:714,name:"Abdukodir Khuasanov"}
+  ]},
+  {key:"mtm",label:"Momentum",icon:"🚀",cards:[
+    {id:801,name:"Jude Bellingham"},
+    {id:802,name:"Ousmane Dembele"},
+    {id:803,name:"Christian Pulisic"},
+    {id:804,name:"Zidane/Pele/Beckenbauer"}
+  ]},
+  {key:"db",label:"World Cup Master",icon:"🏆",cards:[
+    {id:901,name:"Angel Di Maria"},
+    {id:902,name:"Javier Mascherano"},
+    {id:903,name:"Lionel Messi"},
+    {id:904,name:"Gabriel Batistuta"},
+    {id:905,name:"Pele"},
+    {id:906,name:"Ronaldo"},
+    {id:907,name:"Rivaldo"},
+    {id:908,name:"Kaka"},
+    {id:909,name:"Luka Modric"},
+    {id:910,name:"Michel Platini"},
+    {id:911,name:"Zinedine Zidane"},
+    {id:912,name:"Thierry Henry"},
+    {id:913,name:"Manuel Neuer"},
+    {id:914,name:"Franz Beckenbauer"},
+    {id:915,name:"Lothar Matthaus"},
+    {id:916,name:"Miroslav Klose"},
+    {id:917,name:"Paolo Maldini"},
+    {id:918,name:"Fabio Cannavaro"},
+    {id:919,name:"Francesco Totti"},
+    {id:920,name:"Robin Van Persie"},
+    {id:921,name:"Andreas Iniesta"},
+    {id:922,name:"Sergio Busquest"},
+    {id:923,name:"David Villa"},
+    {id:924,name:"Luis Suarez"}
+  ]},
+];
+// flatten + index extras; give each a team/flag so existing renderers work
+EXTRA_SETS.forEach(s=>s.cards.forEach(c=>{c.ext=s.key;c.team=s.label;c.flag=s.icon;}));
+const EXTRA_CARDS=EXTRA_SETS.flatMap(s=>s.cards);
+const EXTRA_BY_ID=Object.fromEntries(EXTRA_CARDS.map(c=>[c.id,c]));
+const EXTRA_SET_BY_KEY=Object.fromEntries(EXTRA_SETS.map(s=>[s.key,s]));
+function cardById(id){return ALL_CARDS.find(c=>c.id===id)||EXTRA_BY_ID[id]||null;}
+function isExtra(id){return !!EXTRA_BY_ID[id];}
+function baseOwnedCount(){let n=0;owned.forEach(id=>{if(id<=TOTAL)n++;});return n;}
+
 // 42 national teams (cards 10–513)
 const TEAMS_LIST = [...new Set(ALL_CARDS.filter(c=>c.id>=10&&c.id<=513).map(c=>c.team))].sort();
 function teamFlag(name){return ALL_CARDS.find(c=>c.team===name)?.flag||'🌐';}
@@ -1342,7 +1483,7 @@ function getStats(){
 
 // ── Header ──
 function updateHeader(){
-  const n=owned.size, p=pct(n,TOTAL);
+  const n=baseOwnedCount(), p=pct(n,TOTAL);
   document.getElementById('hdr-owned').textContent=n;
   document.getElementById('hdr-pct').textContent=p+'%';
   const totalDupes=Object.values(dupes).reduce((s,q)=>s+(q||0),0);
@@ -1352,13 +1493,14 @@ function updateHeader(){
 
 // ── Dashboard ──
 function renderDashboard(){
-  const n=owned.size,p=pct(n,TOTAL);
+  const n=baseOwnedCount(),p=pct(n,TOTAL);
   const stats=getStats();
   document.getElementById('s-owned').textContent=n;
   document.getElementById('s-missing').textContent=TOTAL-n;
   document.getElementById('s-owned-pct').textContent=p+'% complete';
   document.getElementById('sb-owned').style.width=p+'%';
   document.getElementById('sb-missing').style.width=pct(TOTAL-n,TOTAL)+'%';
+  renderExtraTiles();
 
   // Rarity
   const rl=document.getElementById('rarity-list');rl.innerHTML='';
@@ -1404,6 +1546,7 @@ function buildFilterOptions(){
     {key:'all',    label:'All'},
     {key:'missing',label:'Missing'},
     {key:'owned',  label:'Owned'},
+    ...EXTRA_SETS.map(s=>({key:'ext:'+s.key,label:s.icon+' '+s.label})),
     {key:'pos:GK', label:'🥅 GK'},
     {key:'pos:DF', label:'🛡️ DF'},
     {key:'pos:MF', label:'⚙️ MF'},
@@ -1446,20 +1589,36 @@ function getFilteredCards(){
   });
 }
 
+function renderExtraTiles(){
+  const el=document.getElementById('extra-tiles'); if(!el)return;
+  el.innerHTML=EXTRA_SETS.map(s=>{
+    const total=s.cards.length, own=s.cards.filter(c=>owned.has(c.id)).length, p=pct(own,total);
+    return `<div class="extra-tile" onclick="openFilter('ext:${s.key}')" role="button" tabindex="0">
+      <div class="extra-tile-icon">${s.icon}</div>
+      <div class="extra-tile-info">
+        <div class="extra-tile-label">${s.label}</div>
+        <div class="extra-tile-count">${own}/${total} · ${p}%</div>
+      </div>
+      <div class="extra-tile-cta">›</div>
+    </div>`;
+  }).join('');
+}
+
 function cardItemHtml(c){
   const isOwned=owned.has(c.id);
-  const cm=CAT_META[c.cat]||{rarity:'common',short:c.cat};
+  const ext=isExtra(c.id);
+  const cm=ext?{rarity:'special',short:c.team}:(CAT_META[c.cat]||{rarity:'common',short:c.cat});
   const rar=cm.rarity;
   const cardNum=String(c.id).padStart(3,'0');
   const imgUrl=`images/cards/${cardNum}.jpeg`;
-  const posBadge=c.pos?`<span class="card-pos pos-${c.pos.toLowerCase()}">${c.pos}</span>`:'';
-  const rarLabel=(RARITIES[rar]?.label||rar).split(' ')[0];
+  const posBadge=(!ext&&c.pos)?`<span class="card-pos pos-${c.pos.toLowerCase()}">${c.pos}</span>`:'';
+  const rarLabel=ext?'':(RARITIES[rar]?.label||rar).split(' ')[0];
   return `<div class="card-item${isOwned?' owned':''}" onclick="openModal(${c.id})">
-    <div class="card-art cat-${c.cat}">
+    <div class="card-art${ext?'':' cat-'+c.cat}">
       <img class="card-img" src="${imgUrl}" alt="" loading="lazy" onerror="this.style.display='none'">
       <div class="card-top">
         <span class="card-num">#${cardNum}</span>
-        <span class="card-rar rar-${rar}">${rarLabel}</span>
+        ${rarLabel?`<span class="card-rar rar-${rar}">${rarLabel}</span>`:''}
       </div>
       <div class="card-flag-wrap"><span class="card-flag">${c.flag}</span></div>
       <div class="card-bottom">
@@ -1472,8 +1631,20 @@ function cardItemHtml(c){
 }
 
 function renderCollection(){
-  const cards=getFilteredCards();
   const list=document.getElementById('coll-list');
+  // Extra sets (Limited Edition / Momentum / World Cup Master) — own counter, flat numeric
+  if(activeFilter.startsWith('ext:')){
+    const set=EXTRA_SET_BY_KEY[activeFilter.slice(4)];
+    if(!set){list.innerHTML='';return;}
+    const ec=set.cards.slice().sort((a,b)=>a.id-b.id);
+    const ownedN=ec.filter(c=>owned.has(c.id)).length;
+    list.innerHTML=`<div class="group-header">
+      <span class="group-name">${set.icon} ${set.label}</span>
+      <span class="group-count">${ownedN}/${ec.length}</span>
+    </div><div class="cards-grid">${ec.map(cardItemHtml).join('')}</div>`;
+    return;
+  }
+  const cards=getFilteredCards();
   if(!cards.length){
     list.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">No cards found</div></div>';
     return;
@@ -1517,17 +1688,18 @@ function renderCollection(){
 // ── Modal ──
 let modalCardId=null;
 function openModal(cardId){
-  const c=ALL_CARDS.find(x=>x.id===cardId);
+  const c=cardById(cardId);
   if(!c)return;
   modalCardId=cardId;
-  const cm=CAT_META[c.cat]||{label:c.cat,color:'#888',rarity:'common'};
-  const pm=c.pos?POS_META[c.pos]:null;
-  const rar=RARITIES[cm.rarity]||{label:'Common',color:'#8899AA'};
+  const ext=isExtra(cardId);
+  const cm=ext?{label:c.team,color:'#F4C430',rarity:'special',icon:c.flag}:(CAT_META[c.cat]||{label:c.cat,color:'#888',rarity:'common'});
+  const pm=(!ext&&c.pos)?POS_META[c.pos]:null;
+  const rar=ext?{label:c.team,color:'#F4C430'}:(RARITIES[cm.rarity]||{label:'Common',color:'#8899AA'});
   const posLabel=pm?' · '+pm.label:'';
   const cardNum=String(c.id).padStart(3,'0');
   const cv=document.getElementById('modal-card-visual');
-  cv.className=`modal-card-visual cat-${c.cat}`;
-  document.getElementById('modal-cv-icon').textContent=cm.icon;
+  cv.className='modal-card-visual'+(ext?'':` cat-${c.cat}`);
+  document.getElementById('modal-cv-icon').textContent=cm.icon||'';
   document.getElementById('modal-cv-flag').textContent=c.flag;
   document.getElementById('modal-cv-name').textContent=c.name;
   document.getElementById('modal-cv-num').textContent=`#${cardNum}`;
@@ -1536,7 +1708,7 @@ function openModal(cardId){
   photo.src=`images/cards/${cardNum}.jpeg`;
   document.getElementById('modal-num').textContent=`#${cardNum}`;
   document.getElementById('modal-name').textContent=`${c.flag} ${c.name}`;
-  document.getElementById('modal-team').textContent=c.team+' · '+cm.label+posLabel;
+  document.getElementById('modal-team').textContent=ext?c.team:(c.team+' · '+cm.label+posLabel);
   const rm=document.getElementById('modal-rarity');
   rm.textContent=rar.label;
   rm.style.background=rar.color+'22';
@@ -1545,7 +1717,7 @@ function openModal(cardId){
   const isOwned=owned.has(cardId);
   cv.classList.toggle('owned',isOwned);
   cv.classList.remove('nav-anim'); void cv.offsetWidth; cv.classList.add('nav-anim');
-  const navIds=ALL_CARDS.map(x=>x.id).sort((a,b)=>a-b), navPos=navIds.indexOf(cardId);
+  const navIds=siblingIds(cardId), navPos=navIds.indexOf(cardId);
   document.getElementById('modal-prev').disabled=navPos<=0;
   document.getElementById('modal-next').disabled=navPos>=navIds.length-1;
   document.getElementById('modal-actions').innerHTML=isOwned
@@ -1559,10 +1731,15 @@ function closeModal(){
   document.getElementById('modal-overlay').classList.remove('open');
   modalCardId=null;
 }
+// the set of ids the card belongs to (base 1–630, or its extra set), in order
+function siblingIds(id){
+  if(isExtra(id)) return EXTRA_SET_BY_KEY[EXTRA_BY_ID[id].ext].cards.map(c=>c.id).sort((a,b)=>a-b);
+  return ALL_CARDS.map(c=>c.id).sort((a,b)=>a-b);
+}
 // Navigate to the previous/next card (numeric order) while the modal is open
 function modalNav(dir){
   if(modalCardId==null)return;
-  const ids=ALL_CARDS.map(c=>c.id).sort((a,b)=>a-b);
+  const ids=siblingIds(modalCardId);
   const i=ids.indexOf(modalCardId)+dir;
   if(i<0||i>=ids.length)return;       // clamp at the ends
   openModal(ids[i]);
@@ -1607,7 +1784,7 @@ function dupeList(){
   return Object.keys(dupes)
     .map(id=>({id:+id,qty:dupes[id]}))
     .filter(d=>d.qty>0)
-    .map(d=>({...d,card:ALL_CARDS.find(c=>c.id===d.id)}))
+    .map(d=>({...d,card:cardById(d.id)}))
     .filter(d=>d.card)
     .sort((a,b)=>a.id-b.id);
 }
@@ -1705,7 +1882,7 @@ function exportMissingCsv(){
 }
 
 function toggleCard(cardId,add){
-  const c=ALL_CARDS.find(x=>x.id===cardId);if(!c)return;
+  const c=cardById(cardId);if(!c)return;
   if(add){
     owned.add(cardId);
     recentAdds=[cardId,...recentAdds.filter(x=>x!==cardId)].slice(0,10);
@@ -1826,7 +2003,7 @@ function pickNumber(digits){
   for(const len of [3,2,1]){
     if(digits.length>=len){
       const v=parseInt(digits.slice(0,len),10);
-      if(v>=1&&v<=TOTAL)return v;
+      if(cardById(v))return v;   // base 1–630 or any extra card
     }
   }
   return null;
@@ -1834,7 +2011,7 @@ function pickNumber(digits){
 function handleOcr(digits,manual){
   const n=digits?pickNumber(digits):null;
   // live feedback so it never feels "dead"
-  setScanSub(digits?('Read: '+digits+(n?'  →  #'+String(n).padStart(3,'0'):'  (not 1–630)')):'Looking… fit the number in the box');
+  setScanSub(digits?('Read: '+digits+(n?'  →  #'+String(n).padStart(3,'0'):'  (no card)')):'Looking… fit the number in the box');
   if(n==null)return;
   // confirm: a manual tap is trusted immediately; auto-mode needs to see the
   // same number twice in a row to avoid misfires
@@ -1846,7 +2023,7 @@ function handleOcr(digits,manual){
   const now=Date.now();
   if(n===lastHandled && now-lastHandledAt<3000)return;
   lastHandled=n; lastHandledAt=now; lastSeen=null; lastSeenCount=0;
-  const c=ALL_CARDS.find(x=>x.id===n);
+  const c=cardById(n);
   if(!c)return;
   setScanStatus('🎯',`#${String(n).padStart(3,'0')} · ${c.name}`,'Confirm below — swipe to fix if the number is off');
   openModal(n);   // show the card so the user confirms with one tap (and can swipe to adjust)
@@ -1859,14 +2036,14 @@ function renderRecentAdds(){
   if(!recentAdds.length){box.style.display='none';return;}
   box.style.display='block';
   list.innerHTML=recentAdds.slice(0,8).map(id=>{
-    const c=ALL_CARDS.find(x=>x.id===id);
+    const c=cardById(id);
     return c?`<div class="recent-item"><span class="recent-num">#${c.id}</span><span class="recent-name">${c.name}</span><span class="recent-team">${c.flag} ${c.team}</span></div>`:'';
   }).join('');
 }
 
 // ── Stats ──
 function renderStats(){
-  const n=owned.size,p=pct(n,TOTAL);
+  const n=baseOwnedCount(),p=pct(n,TOTAL);
   const stats=getStats();
   const circ=2*Math.PI*68;
   document.getElementById('ring-circle').style.strokeDashoffset=circ-(p/100)*circ;
