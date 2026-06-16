@@ -1472,9 +1472,9 @@ function renderCollection(){
     return;
   }
   cards.sort((a,b)=>a.id-b.id);
-  // Collected / Missing: flat list in numeric order (no team grouping)
-  if(activeFilter==='owned'||activeFilter==='missing'){
-    const label=activeFilter==='owned'?'Collected':'Missing';
+  // All / Collected / Missing: flat list in numeric order (no team grouping)
+  if(activeFilter==='all'||activeFilter==='owned'||activeFilter==='missing'){
+    const label=activeFilter==='owned'?'Collected':activeFilter==='missing'?'Missing':'All cards';
     list.innerHTML=`<div class="group-header">
       <span class="group-name">${label}</span>
       <span class="group-count">${cards.length}</span>
