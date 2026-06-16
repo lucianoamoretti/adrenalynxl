@@ -379,6 +379,9 @@
     /* ── Duplicates: modal stepper ── */
     .modal-dupes { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 14px; padding: 10px 14px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); }
     .modal-dupes-label { font-size: 13px; font-weight: 700; color: var(--white); }
+    .dupes-warning { margin: 0 0 12px; padding: 9px 12px; border-radius: var(--radius-sm); background: rgba(255,170,40,0.12); border: 1px solid rgba(255,170,40,0.45); color: #ffce7a; font-size: 12px; font-weight: 600; line-height: 1.4; }
+    .dupe-row.warn { border-color: rgba(255,170,40,0.55); }
+    .dupe-warn-badge { flex-shrink: 0; font-size: 14px; }
     .dupes-stepper { display: flex; align-items: center; gap: 14px; }
     .dupes-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--card-border); background: rgba(255,255,255,0.06); color: var(--gold); font-size: 20px; font-weight: 700; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .dupes-btn:active { transform: scale(0.92); }
@@ -602,6 +605,7 @@
         <button class="dupes-btn" onclick="changeDupe(1)" aria-label="mais">+</button>
       </div>
     </div>
+    <div class="dupes-warning" id="modal-dupes-warning" style="display:none">⚠️ You have duplicates but don't own this card yet. Add it to your collection.</div>
     <div class="modal-actions" id="modal-actions"></div>
   </div>
 </div>
@@ -1749,6 +1753,7 @@ function openModal(cardId){
     ?`<button class="btn-remove" onclick="toggleCard(${cardId},false)">Remove from collection</button>`
     :`<button class="btn-add" onclick="toggleCard(${cardId},true)">Add to collection ✓</button>`;
   document.getElementById('modal-dupes-count').textContent=dupes[cardId]||0;
+  updateDupeWarning(cardId);
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -1794,11 +1799,23 @@ document.addEventListener('keydown',e=>{
 })();
 
 // ── Duplicates ──
+function updateDupeWarning(cardId){
+  const w=document.getElementById('modal-dupes-warning'); if(!w)return;
+  const show=modalCardId===cardId && (dupes[cardId]||0)>0 && !owned.has(cardId);
+  w.style.display=show?'':'none';
+}
 function setDupe(cardId,qty){
+  const prev=dupes[cardId]||0;
   qty=Math.max(0,qty|0);
   if(qty===0) delete dupes[cardId]; else dupes[cardId]=qty;
   saveDupes();
   if(modalCardId===cardId) document.getElementById('modal-dupes-count').textContent=qty;
+  // warn when registering a duplicate of a card not in the collection
+  if(qty>prev && !owned.has(cardId)){
+    const c=cardById(cardId);
+    showToast(`⚠️ You don't own #${cardId}${c?(' '+c.name):''} yet`,'info');
+  }
+  updateDupeWarning(cardId);
   renderDupes();updateHeader();
 }
 function changeDupe(delta){
@@ -1829,11 +1846,12 @@ function renderDupes(){
   if(!hasItems){ list.innerHTML='<div class="dupes-empty">Open a card and use 🔁 Duplicates to record how many extras you have.</div>'; return; }
   list.innerHTML=items.map(d=>{
     const num=String(d.id).padStart(3,'0');
-    return `<div class="dupe-row">
+    const missing=!owned.has(d.id);
+    return `<div class="dupe-row${missing?' warn':''}">
       <img class="dupe-thumb" src="images/cards/${num}.jpeg" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
       <div class="dupe-info">
-        <div class="dupe-name">#${num} · ${d.card.name}</div>
-        <div class="dupe-meta">${d.card.flag} ${d.card.team}</div>
+        <div class="dupe-name">#${num} · ${d.card.name}${missing?' <span class="dupe-warn-badge" title="Not in your collection">⚠️</span>':''}</div>
+        <div class="dupe-meta">${missing?'⚠️ not in your collection':(d.card.flag+' '+d.card.team)}</div>
       </div>
       <div class="dupe-stepper">
         <button class="dupes-btn" onclick="setDupe(${d.id},${d.qty-1})" aria-label="menos">−</button>
@@ -1948,6 +1966,7 @@ function toggleCard(cardId,add){
   document.getElementById('modal-actions').innerHTML=isOwned
     ?`<button class="btn-remove" onclick="toggleCard(${cardId},false)">Remove from collection</button>`
     :`<button class="btn-add" onclick="toggleCard(${cardId},true)">Add to collection ✓</button>`;
+  updateDupeWarning(cardId);
 }
 
 
