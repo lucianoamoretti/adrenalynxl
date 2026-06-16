@@ -480,18 +480,10 @@
     <!-- SCANNER -->
     <div class="screen" id="screen-scanner">
       <div class="scanner-wrap">
-        <div class="qr-viewport">
-          <video id="cam" playsinline muted></video>
-          <canvas id="cam-canvas" style="display:none"></canvas>
-          <div class="qr-overlay">
-            <div class="scan-box"><span class="scan-box-hint">Fit the number here</span></div>
-          </div>
-        </div>
-        <button class="btn-primary scan-now-btn" onclick="scanFrame(true)">📷 Scan now</button>
         <div class="scanner-status" id="scanner-status">
-          <div class="scanner-status-icon">📷</div>
-          <div class="scanner-status-text">Point at the card number</div>
-          <div class="scanner-status-sub">Fit only the number inside the box, hold steady, then tap “Scan now”</div>
+          <div class="scanner-status-icon">🚧</div>
+          <div class="scanner-status-text">Camera scanner on stand-by</div>
+          <div class="scanner-status-sub">Temporarily disabled while we find a more accurate method. Add cards by number below.</div>
         </div>
         <div class="manual-add">
           <div class="manual-title">Add by number</div>
@@ -1959,6 +1951,9 @@ async function initOcr(){
   }catch(e){ console.error('OCR init failed',e); ocrWorker=null; ocrReady=false; }
 }
 async function startScanner(){
+  // Camera scanner is on stand-by until a more accurate method is found.
+  return;
+  /* eslint-disable no-unreachable */
   if(camStream)return;
   const video=document.getElementById('cam');
   setScanStatus('⏳','Opening camera…','Please allow camera access');
