@@ -333,6 +333,23 @@
     @media (min-width: 1100px) {
       .team-grid { grid-template-columns: repeat(4, 1fr); }
     }
+
+    /* ── Login screen ── */
+    .auth-overlay { position: fixed; inset: 0; z-index: 400; display: flex; align-items: center; justify-content: center; padding: 24px; background: radial-gradient(circle at 50% 0%, var(--navy-mid), var(--navy-dark) 70%); }
+    .auth-overlay.hidden { display: none; }
+    .auth-card { width: 100%; max-width: 340px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px; padding: 28px 24px; display: flex; flex-direction: column; gap: 12px; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
+    .auth-badge { width: 56px; height: 56px; border-radius: 50%; background: var(--navy-mid); border: 2px solid var(--gold); color: var(--gold); font-size: 22px; font-weight: 900; display: flex; align-items: center; justify-content: center; margin: 0 auto 4px; font-family: Arial, sans-serif; }
+    .auth-title { font-size: 18px; font-weight: 800; color: var(--gold); letter-spacing: 0.5px; text-transform: uppercase; }
+    .auth-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+    .auth-input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--card-border); border-radius: 10px; padding: 12px 14px; color: var(--white); font-size: 15px; outline: none; }
+    .auth-input:focus { border-color: var(--gold); }
+    .auth-error { font-size: 12px; color: #ff7b7b; min-height: 14px; text-align: left; }
+    .auth-btn { width: 100%; border: 1px solid var(--card-border); border-radius: 99px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; background: transparent; color: var(--white); transition: opacity 0.15s; }
+    .auth-btn:disabled { opacity: 0.5; cursor: default; }
+    .auth-btn.primary { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: var(--navy-dark); border: none; }
+    .logout-btn { background: transparent; border: 1px solid var(--card-border); color: var(--text-muted); border-radius: 99px; padding: 5px 12px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .logout-btn:hover { color: var(--white); border-color: var(--gold); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
   </style>
 </head>
 <body>
@@ -349,9 +366,12 @@
           <div class="header-subtitle">FIFA World Cup 2026™</div>
         </div>
       </div>
-      <div class="header-count">
-        <div class="count-big" id="hdr-owned">0</div>
-        <div class="count-label">of 630 cards</div>
+      <div class="header-right">
+        <div class="header-count">
+          <div class="count-big" id="hdr-owned">0</div>
+          <div class="count-label">of 630 cards</div>
+        </div>
+        <button class="logout-btn" id="logout-btn" onclick="doLogout()" title="Sair">Sair</button>
       </div>
     </div>
     <div class="progress-bar-wrap">
@@ -515,7 +535,24 @@
   </div>
 </div>
 
+<!-- LOGIN -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-badge">26</div>
+    <div class="auth-title">Adrenalyn XL</div>
+    <div class="auth-sub">FIFA World Cup 2026™ · seu catálogo</div>
+    <input class="auth-input" id="auth-email" type="email" placeholder="Email" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()">
+    <input class="auth-input" id="auth-pass" type="password" placeholder="Senha (mín. 6 caracteres)" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="auth-error" id="auth-error"></div>
+    <button class="auth-btn primary" id="auth-login-btn" onclick="doLogin()">Entrar</button>
+    <button class="auth-btn" id="auth-signup-btn" onclick="doSignup()">Criar conta</button>
+  </div>
+</div>
+
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 // ══════════════════════════════════════════════════
 // CARD METADATA
@@ -1189,11 +1226,11 @@ const TOTAL = 630;
 const TEAMS_LIST = [...new Set(ALL_CARDS.filter(c=>c.id>=10&&c.id<=513).map(c=>c.team))].sort();
 function teamFlag(name){return ALL_CARDS.find(c=>c.team===name)?.flag||'🌐';}
 
-// ── State ──
-let owned=new Set(JSON.parse(localStorage.getItem('wc2026_owned')||'[]'));
-let recentAdds=JSON.parse(localStorage.getItem('wc2026_recent')||'[]');
-function saveOwned(){localStorage.setItem('wc2026_owned',JSON.stringify([...owned]));}
-function saveRecent(){localStorage.setItem('wc2026_recent',JSON.stringify(recentAdds));}
+// ── State (catalog lives in the cloud, per logged-in user) ──
+let owned=new Set();
+let recentAdds=[];
+function saveOwned(){persist();}
+function saveRecent(){persist();}
 
 // ── Filter state ──
 let activeFilter='all';
@@ -1577,7 +1614,104 @@ function showToast(msg,type='info'){
 }
 
 // ── Init ──
-buildFilterOptions();renderFilterChips();updateHeader();renderDashboard();renderCollection();renderStats();renderRecentAdds();
+function renderAll(){updateHeader();renderDashboard();renderCollection();renderStats();renderRecentAdds();}
+buildFilterOptions();renderFilterChips();renderAll();
+
+// ══════════════════════════════════════════════════
+// Firebase Auth + cloud sync (each user has their own catalog)
+// ══════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyCGt1EQzuupqTTaBLKa5VlIoavFYIi9MSM",
+  authDomain: "adrenalyn-ab5ce.firebaseapp.com",
+  projectId: "adrenalyn-ab5ce",
+  storageBucket: "adrenalyn-ab5ce.firebasestorage.app",
+  messagingSenderId: "799849375730",
+  appId: "1:799849375730:web:57b8425a8554dbad56ad6b",
+  measurementId: "G-9G3RMYVGEL"
+};
+firebase.initializeApp(firebaseConfig);
+const fbAuth=firebase.auth();
+const fbDb=firebase.firestore();
+let currentUser=null;
+
+function authMsg(m){document.getElementById('auth-error').textContent=m||'';}
+function authErrPt(code){
+  const map={
+    'auth/invalid-email':'Email inválido.',
+    'auth/missing-password':'Informe a senha.',
+    'auth/weak-password':'A senha precisa ter ao menos 6 caracteres.',
+    'auth/email-already-in-use':'Esse email já tem uma conta. Tente entrar.',
+    'auth/invalid-credential':'Email ou senha incorretos.',
+    'auth/wrong-password':'Email ou senha incorretos.',
+    'auth/user-not-found':'Conta não encontrada. Crie uma conta.',
+    'auth/too-many-requests':'Muitas tentativas. Aguarde um pouco.',
+    'auth/network-request-failed':'Falha de conexão. Verifique a internet.'
+  };
+  return map[code]||('Erro: '+code);
+}
+function setAuthBusy(b){
+  document.getElementById('auth-login-btn').disabled=b;
+  document.getElementById('auth-signup-btn').disabled=b;
+}
+async function doLogin(){
+  const email=document.getElementById('auth-email').value.trim();
+  const pass=document.getElementById('auth-pass').value;
+  authMsg('');
+  if(!email||!pass){authMsg('Preencha email e senha.');return;}
+  setAuthBusy(true);
+  try{ await fbAuth.signInWithEmailAndPassword(email,pass); }
+  catch(e){ authMsg(authErrPt(e.code)); }
+  finally{ setAuthBusy(false); }
+}
+async function doSignup(){
+  const email=document.getElementById('auth-email').value.trim();
+  const pass=document.getElementById('auth-pass').value;
+  authMsg('');
+  if(!email){authMsg('Informe um email.');return;}
+  if(pass.length<6){authMsg('A senha precisa ter ao menos 6 caracteres.');return;}
+  setAuthBusy(true);
+  try{ await fbAuth.createUserWithEmailAndPassword(email,pass); }
+  catch(e){ authMsg(authErrPt(e.code)); }
+  finally{ setAuthBusy(false); }
+}
+function doLogout(){ fbAuth.signOut(); }
+
+async function persist(){
+  if(!currentUser)return;
+  try{ await fbDb.collection('users').doc(currentUser.uid).set({owned:[...owned],recent:recentAdds},{merge:true}); }
+  catch(e){ console.error('persist failed',e); showToast('Falha ao salvar na nuvem','info'); }
+}
+async function loadUserData(uid){
+  let data=null;
+  try{ const snap=await fbDb.collection('users').doc(uid).get(); data=snap.exists?snap.data():null; }
+  catch(e){ console.error('load failed',e); }
+  // one-time migration: if the cloud doc has no catalog yet but this browser
+  // had a local one (pre-login), upload it.
+  const localOwned=JSON.parse(localStorage.getItem('wc2026_owned')||'[]');
+  if((!data||!Array.isArray(data.owned)) && localOwned.length){
+    owned=new Set(localOwned);
+    recentAdds=JSON.parse(localStorage.getItem('wc2026_recent')||'[]');
+    await persist();
+  }else{
+    owned=new Set((data&&data.owned)||[]);
+    recentAdds=(data&&data.recent)||[];
+  }
+  renderAll();
+}
+fbAuth.onAuthStateChanged(async user=>{
+  currentUser=user;
+  const overlay=document.getElementById('auth-overlay');
+  if(user){
+    document.getElementById('auth-pass').value='';
+    await loadUserData(user.uid);
+    document.getElementById('logout-btn').title='Sair ('+user.email+')';
+    overlay.classList.add('hidden');
+  }else{
+    owned=new Set(); recentAdds=[];
+    overlay.classList.remove('hidden');
+    renderAll();
+  }
+});
 </script>
 
 </body>
