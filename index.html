@@ -1910,7 +1910,7 @@ function cardsToSimpleText(cards){
   });
   return Object.keys(byTeam).sort().map(team=>{
     const g=byTeam[team];
-    const nums=[...new Set(g.ids)].sort((a,b)=>a-b).map(n=>String(n).padStart(3,'0')).join(', ');
+    const nums=[...new Set(g.ids)].sort((a,b)=>a-b).join(', ');
     return `${g.flag} ${team}: ${nums}`.trim();
   }).join('\n');
 }
