@@ -517,14 +517,14 @@
     <div class="screen" id="screen-dupes">
       <div class="dupes-pad">
 
-        <!-- 🤝 Conferir troca -->
+        <!-- 🤝 Trade check -->
         <div class="trade-check">
-          <div class="dupes-title">🤝 Conferir troca</div>
-          <div class="trade-sub">Cole a lista de repetidas que te enviaram. Eu mostro quais você <b>ainda não tem</b> (pra pedir) e quais já tem (pra dispensar).</div>
-          <textarea class="trade-input" id="trade-input" rows="4" placeholder="Cole os números… ex: 042, 105, 7  ou  #042 | Brasil | Neymar | x2"></textarea>
+          <div class="dupes-title">🤝 Trade check</div>
+          <div class="trade-sub">Paste the duplicates list someone sent you. I'll show which ones you <b>don't have yet</b> (to ask for) and which you already have (to skip).</div>
+          <textarea class="trade-input" id="trade-input" rows="4" placeholder="Paste the numbers… e.g. 042, 105, 7  or  #042 | Brazil | Neymar | x2"></textarea>
           <div class="dupes-export-row">
-            <button class="btn-primary" onclick="checkTrade()">Conferir</button>
-            <button class="btn-secondary" onclick="clearTrade()">Limpar</button>
+            <button class="btn-primary" onclick="checkTrade()">Check</button>
+            <button class="btn-secondary" onclick="clearTrade()">Clear</button>
           </div>
           <div id="trade-results"></div>
         </div>
@@ -533,7 +533,7 @@
 
         <div class="dupes-head">
           <div>
-            <div class="dupes-title">🔁 Minhas repetidas</div>
+            <div class="dupes-title">🔁 My duplicates</div>
             <div class="dupes-summary" id="dupes-summary">No duplicates yet</div>
           </div>
         </div>
@@ -1933,11 +1933,11 @@ const TRADE_MAX_ID=Math.max(...ALL_CARDS.map(c=>c.id),...EXTRA_CARDS.map(c=>c.id
 let lastTradeWant=[];
 function parseCardNumbers(text){
   if(!text)return [];
-  const cleaned=text.replace(/\bx\s*\d+/gi,' '); // ignora quantidades tipo "x2"
+  const cleaned=text.replace(/\bx\s*\d+/gi,' '); // ignore quantities like "x2"
   const matches=cleaned.match(/\d+/g)||[];
   const seen=new Set(),out=[];
   for(const m of matches){
-    const n=parseInt(m,10);                       // "042" -> 42 (lida com zeros à esquerda)
+    const n=parseInt(m,10);                       // "042" -> 42 (handles leading zeros)
     if(n>=1&&n<=TRADE_MAX_ID&&!seen.has(n)){seen.add(n);out.push(n);}
   }
   return out;
@@ -1955,7 +1955,7 @@ function tradeRow(c){
 function checkTrade(){
   const box=document.getElementById('trade-results');
   const nums=parseCardNumbers(document.getElementById('trade-input').value);
-  if(!nums.length){box.innerHTML='<div class="add-hint">Cole uma lista com os números das cartas.</div>';return;}
+  if(!nums.length){box.innerHTML='<div class="add-hint">Paste a list of card numbers.</div>';return;}
   const want=[],have=[],notFound=[];
   nums.forEach(n=>{
     const c=cardById(n);
@@ -1966,32 +1966,32 @@ function checkTrade(){
   want.sort((a,b)=>a.id-b.id);have.sort((a,b)=>a.id-b.id);
   lastTradeWant=want;
   let html=`<div class="trade-stat-row">
-    <div class="trade-stat want"><span>${want.length}</span>quero</div>
-    <div class="trade-stat have"><span>${have.length}</span>já tenho</div>
-    ${notFound.length?`<div class="trade-stat"><span>${notFound.length}</span>não achei</div>`:''}
+    <div class="trade-stat want"><span>${want.length}</span>want</div>
+    <div class="trade-stat have"><span>${have.length}</span>have</div>
+    ${notFound.length?`<div class="trade-stat"><span>${notFound.length}</span>not found</div>`:''}
   </div>`;
   if(want.length){
-    html+=`<div class="trade-group-title">✅ Quero (${want.length}) — peça estas</div>`;
-    html+=`<div class="dupes-export-row"><button class="btn-secondary" onclick="copyTradeWant()">Copiar os que quero</button></div>`;
+    html+=`<div class="trade-group-title">✅ Want (${want.length}) — ask for these</div>`;
+    html+=`<div class="dupes-export-row"><button class="btn-secondary" onclick="copyTradeWant()">Copy the ones I want</button></div>`;
     html+=want.map(tradeRow).join('');
   }else{
-    html+='<div class="dupes-empty">Você já tem todas as cartas dessa lista. 🎉</div>';
+    html+='<div class="dupes-empty">You already have every card on this list. 🎉</div>';
   }
   if(have.length){
-    html+=`<div class="trade-group-title muted">🔁 Você já tem (${have.length})</div>`;
+    html+=`<div class="trade-group-title muted">🔁 You already have (${have.length})</div>`;
     html+=have.map(tradeRow).join('');
   }
   if(notFound.length){
-    html+=`<div class="trade-group-title muted">❓ Não encontrei (${notFound.length})</div>`;
+    html+=`<div class="trade-group-title muted">❓ Not found (${notFound.length})</div>`;
     html+=`<div class="trade-notfound">${notFound.map(n=>'#'+String(n).padStart(3,'0')).join(', ')}</div>`;
   }
   box.innerHTML=html;
 }
 function copyTradeWant(){
-  if(!lastTradeWant.length){showToast('Nada para copiar','info');return;}
+  if(!lastTradeWant.length){showToast('Nothing to copy','info');return;}
   const txt=lastTradeWant.map(c=>`#${String(c.id).padStart(3,'0')} | ${c.team} | ${c.name}`).join('\n');
   if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(()=>showToast('Lista copiada!','success'),()=>fallbackCopy(txt));
+    navigator.clipboard.writeText(txt).then(()=>showToast('List copied!','success'),()=>fallbackCopy(txt));
   }else fallbackCopy(txt);
 }
 function clearTrade(){
