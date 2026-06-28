@@ -404,6 +404,21 @@
     .dupe-stepper { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .dupe-qty { font-size: 15px; font-weight: 800; min-width: 26px; text-align: center; color: var(--gold); }
     .dupes-empty { text-align: center; color: var(--text-muted); font-size: 13px; padding: 40px 16px; }
+    /* ── Trade check ── */
+    .trade-check { margin-bottom: 16px; }
+    .trade-sub { font-size: 12px; color: var(--text-muted); margin: 4px 0 10px; line-height: 1.45; }
+    .trade-input { width: 100%; box-sizing: border-box; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--white); font-size: 13px; font-family: inherit; resize: vertical; outline: none; margin-bottom: 10px; }
+    .trade-input::placeholder { color: var(--text-dim); }
+    .trade-input:focus { border-color: var(--gold); }
+    .trade-divider { height: 1px; background: var(--card-border); margin: 4px 0 16px; }
+    .trade-stat-row { display: flex; gap: 8px; margin: 4px 0 12px; }
+    .trade-stat { flex: 1; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+    .trade-stat span { display: block; font-size: 22px; font-weight: 800; line-height: 1; margin-bottom: 4px; color: var(--white); }
+    .trade-stat.want { border-color: rgba(244,196,48,0.5); }
+    .trade-stat.want span { color: var(--gold); }
+    .trade-group-title { font-size: 12px; font-weight: 700; color: var(--white); text-transform: uppercase; letter-spacing: 0.4px; margin: 14px 0 8px; }
+    .trade-group-title.muted { color: var(--text-muted); }
+    .trade-notfound { font-size: 12px; color: var(--text-muted); padding: 0 2px 8px; line-height: 1.6; }
   </style>
 </head>
 <body>
@@ -501,9 +516,24 @@
     <!-- DUPLICATES -->
     <div class="screen" id="screen-dupes">
       <div class="dupes-pad">
+
+        <!-- 🤝 Conferir troca -->
+        <div class="trade-check">
+          <div class="dupes-title">🤝 Conferir troca</div>
+          <div class="trade-sub">Cole a lista de repetidas que te enviaram. Eu mostro quais você <b>ainda não tem</b> (pra pedir) e quais já tem (pra dispensar).</div>
+          <textarea class="trade-input" id="trade-input" rows="4" placeholder="Cole os números… ex: 042, 105, 7  ou  #042 | Brasil | Neymar | x2"></textarea>
+          <div class="dupes-export-row">
+            <button class="btn-primary" onclick="checkTrade()">Conferir</button>
+            <button class="btn-secondary" onclick="clearTrade()">Limpar</button>
+          </div>
+          <div id="trade-results"></div>
+        </div>
+
+        <div class="trade-divider"></div>
+
         <div class="dupes-head">
           <div>
-            <div class="dupes-title">🔁 Duplicates</div>
+            <div class="dupes-title">🔁 Minhas repetidas</div>
             <div class="dupes-summary" id="dupes-summary">No duplicates yet</div>
           </div>
         </div>
@@ -1896,6 +1926,78 @@ function exportDupesCsv(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url),1000);
   showToast('CSV exported!','success');
+}
+
+// ── 🤝 Trade check: paste someone's duplicates, see which I'm missing ──
+const TRADE_MAX_ID=Math.max(...ALL_CARDS.map(c=>c.id),...EXTRA_CARDS.map(c=>c.id));
+let lastTradeWant=[];
+function parseCardNumbers(text){
+  if(!text)return [];
+  const cleaned=text.replace(/\bx\s*\d+/gi,' '); // ignora quantidades tipo "x2"
+  const matches=cleaned.match(/\d+/g)||[];
+  const seen=new Set(),out=[];
+  for(const m of matches){
+    const n=parseInt(m,10);                       // "042" -> 42 (lida com zeros à esquerda)
+    if(n>=1&&n<=TRADE_MAX_ID&&!seen.has(n)){seen.add(n);out.push(n);}
+  }
+  return out;
+}
+function tradeRow(c){
+  const num=String(c.id).padStart(3,'0');
+  return `<div class="dupe-row" onclick="openModal(${c.id})" style="cursor:pointer">
+    <img class="dupe-thumb" src="images/cards/${num}.jpeg" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+    <div class="dupe-info">
+      <div class="dupe-name">#${num} · ${c.name}</div>
+      <div class="dupe-meta">${c.flag||''} ${c.team||''}</div>
+    </div>
+  </div>`;
+}
+function checkTrade(){
+  const box=document.getElementById('trade-results');
+  const nums=parseCardNumbers(document.getElementById('trade-input').value);
+  if(!nums.length){box.innerHTML='<div class="add-hint">Cole uma lista com os números das cartas.</div>';return;}
+  const want=[],have=[],notFound=[];
+  nums.forEach(n=>{
+    const c=cardById(n);
+    if(!c)notFound.push(n);
+    else if(owned.has(n))have.push(c);
+    else want.push(c);
+  });
+  want.sort((a,b)=>a.id-b.id);have.sort((a,b)=>a.id-b.id);
+  lastTradeWant=want;
+  let html=`<div class="trade-stat-row">
+    <div class="trade-stat want"><span>${want.length}</span>quero</div>
+    <div class="trade-stat have"><span>${have.length}</span>já tenho</div>
+    ${notFound.length?`<div class="trade-stat"><span>${notFound.length}</span>não achei</div>`:''}
+  </div>`;
+  if(want.length){
+    html+=`<div class="trade-group-title">✅ Quero (${want.length}) — peça estas</div>`;
+    html+=`<div class="dupes-export-row"><button class="btn-secondary" onclick="copyTradeWant()">Copiar os que quero</button></div>`;
+    html+=want.map(tradeRow).join('');
+  }else{
+    html+='<div class="dupes-empty">Você já tem todas as cartas dessa lista. 🎉</div>';
+  }
+  if(have.length){
+    html+=`<div class="trade-group-title muted">🔁 Você já tem (${have.length})</div>`;
+    html+=have.map(tradeRow).join('');
+  }
+  if(notFound.length){
+    html+=`<div class="trade-group-title muted">❓ Não encontrei (${notFound.length})</div>`;
+    html+=`<div class="trade-notfound">${notFound.map(n=>'#'+String(n).padStart(3,'0')).join(', ')}</div>`;
+  }
+  box.innerHTML=html;
+}
+function copyTradeWant(){
+  if(!lastTradeWant.length){showToast('Nada para copiar','info');return;}
+  const txt=lastTradeWant.map(c=>`#${String(c.id).padStart(3,'0')} | ${c.team} | ${c.name}`).join('\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>showToast('Lista copiada!','success'),()=>fallbackCopy(txt));
+  }else fallbackCopy(txt);
+}
+function clearTrade(){
+  document.getElementById('trade-input').value='';
+  document.getElementById('trade-results').innerHTML='';
+  lastTradeWant=[];
 }
 
 // ── Missing list export (NUMBER, TEAM, NAME) ──
