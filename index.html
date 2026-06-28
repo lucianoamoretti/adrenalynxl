@@ -538,8 +538,9 @@
           </div>
         </div>
         <div class="dupes-export-row">
-          <button class="btn-primary" id="dupes-copy-btn" onclick="copyDupes()">Copy list</button>
-          <button class="btn-secondary" id="dupes-csv-btn" onclick="exportDupesCsv()">Download CSV</button>
+          <button class="btn-primary" id="dupes-copy-btn" onclick="copyDupes()">Copy full</button>
+          <button class="btn-secondary" id="dupes-simple-btn" onclick="copyDupesSimple()">Copy simple</button>
+          <button class="btn-secondary" id="dupes-csv-btn" onclick="exportDupesCsv()">CSV</button>
         </div>
         <div id="dupes-list"></div>
       </div>
@@ -1871,6 +1872,7 @@ function renderDupes(){
   const totalCount=items.reduce((s,d)=>s+d.qty,0);
   const hasItems=totalKinds>0;
   document.getElementById('dupes-copy-btn').disabled=!hasItems;
+  document.getElementById('dupes-simple-btn').disabled=!hasItems;
   document.getElementById('dupes-csv-btn').disabled=!hasItems;
   summary.textContent=hasItems
     ? `${totalCount} duplicate(s) · ${totalKinds} different card(s)`
@@ -1896,6 +1898,28 @@ function renderDupes(){
 function dupesAsText(){
   // NUMBER, TEAM, NAME, QTY
   return dupeList().map(d=>`#${String(d.id).padStart(3,'0')} | ${d.card.team} | ${d.card.name} | x${d.qty}`).join('\n');
+}
+// Simple list: grouped by country (flag + name), card numbers only, comma-separated
+function cardsToSimpleText(cards){
+  const byTeam={};
+  cards.forEach(c=>{
+    if(!c)return;
+    const team=c.team||'—';
+    if(!byTeam[team])byTeam[team]={flag:c.flag||'',ids:[]};
+    byTeam[team].ids.push(c.id);
+  });
+  return Object.keys(byTeam).sort().map(team=>{
+    const g=byTeam[team];
+    const nums=[...new Set(g.ids)].sort((a,b)=>a-b).map(n=>String(n).padStart(3,'0')).join(', ');
+    return `${g.flag} ${team}: ${nums}`.trim();
+  }).join('\n');
+}
+function copyDupesSimple(){
+  const txt=cardsToSimpleText(dupeList().map(d=>d.card));
+  if(!txt){showToast('No duplicates to copy','info');return;}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>showToast('Simple list copied!','success'),()=>fallbackCopy(txt));
+  }else fallbackCopy(txt);
 }
 function copyDupes(){
   const txt=dupesAsText();
@@ -1972,7 +1996,7 @@ function checkTrade(){
   </div>`;
   if(want.length){
     html+=`<div class="trade-group-title">✅ Want (${want.length}) — ask for these</div>`;
-    html+=`<div class="dupes-export-row"><button class="btn-secondary" onclick="copyTradeWant()">Copy the ones I want</button></div>`;
+    html+=`<div class="dupes-export-row"><button class="btn-secondary" onclick="copyTradeWant()">Copy full</button><button class="btn-secondary" onclick="copyTradeWantSimple()">Copy simple</button></div>`;
     html+=want.map(tradeRow).join('');
   }else{
     html+='<div class="dupes-empty">You already have every card on this list. 🎉</div>';
@@ -1992,6 +2016,13 @@ function copyTradeWant(){
   const txt=lastTradeWant.map(c=>`#${String(c.id).padStart(3,'0')} | ${c.team} | ${c.name}`).join('\n');
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(()=>showToast('List copied!','success'),()=>fallbackCopy(txt));
+  }else fallbackCopy(txt);
+}
+function copyTradeWantSimple(){
+  if(!lastTradeWant.length){showToast('Nothing to copy','info');return;}
+  const txt=cardsToSimpleText(lastTradeWant);
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>showToast('Simple list copied!','success'),()=>fallbackCopy(txt));
   }else fallbackCopy(txt);
 }
 function clearTrade(){
