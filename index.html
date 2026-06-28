@@ -1565,6 +1565,8 @@ function openFilter(key){
 
 // accent-insensitive normalizer used by every search field
 function norm(s){return (s==null?'':s.toString()).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+// Match a card number with or without leading zeros (so "42", "042" and "0042" all find card #042)
+function idMatch(id,q){const s=String(id);return s.includes(q)||s.padStart(3,'0').includes(q);}
 
 function filterCards(){searchQuery=document.getElementById('search-input').value;renderCollection();}
 
@@ -1578,7 +1580,7 @@ function getFilteredCards(){
     if(activeFilter.startsWith('rar:') &&catR(c)!==activeFilter.slice(4))return false;
     if(activeFilter.startsWith('pos:') &&c.pos !==activeFilter.slice(4))return false;
     if(q){
-      if(!norm(c.name).includes(q)&&!norm(c.team).includes(q)&&!String(c.id).includes(q))return false;
+      if(!norm(c.name).includes(q)&&!norm(c.team).includes(q)&&!idMatch(c.id,q))return false;
     }
     return true;
   });
@@ -1592,7 +1594,7 @@ function renderAddResults(){
   const all=[...ALL_CARDS,...EXTRA_CARDS];
   let res;
   if(/^\d+$/.test(raw)){
-    res=all.filter(c=>String(c.id).includes(raw));
+    res=all.filter(c=>idMatch(c.id,raw));
   }else{
     const q=norm(raw);
     res=all.filter(c=>norm(c.name).includes(q)||norm(c.team).includes(q));
